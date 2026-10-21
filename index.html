@@ -211,6 +211,7 @@ details[open] summary::before{transform:rotate(45deg)}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
+<script src="fresh.js"></script>
 <script>
 (function(){
 "use strict";
@@ -453,13 +454,14 @@ function renderToday(){
   const k=K(),t=today(),ci=k.checkins[t]||{},kid=KIDS[S.active];
   const doneToday=k.habits.filter(h=>h.done.includes(t)).length;
   const hour=new Date().getHours();const greet=hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
-  const quest=k.quest[t]||(k.quest[t]=QUESTS[Math.floor(Math.random()*QUESTS.length)],save(),k.quest[t]);
+  const QPOOL=QUESTS.concat(((freshDeck()||{}).quests)||[]);const quest=k.quest[t]||(k.quest[t]=QPOOL[Math.floor(Math.random()*QPOOL.length)],save(),k.quest[t]);
   const temp=ci.temp;
   return `
   <section class="hero">
     <div class="row between"><h1>${greet}, ${kid.name}.</h1><span class="pill">${checkinStreak(k)} day check-in streak</span></div>
     <p style="font-size:18px;opacity:.95">${doneToday===k.habits.length&&k.habits.length?"All habits done. You showed up today.":doneToday+" of "+k.habits.length+" habits done. Small things, every day."}</p>
   </section>
+  ${(()=>{const f=freshDeck();if(!f)return "";const seen=(()=>{try{return localStorage.getItem("fresh-seen")}catch(e){return null}})();if(seen===f.week)return "";return `<section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>New this week: ${esc(f.theme||"fresh stuff")}</h2><button class="btn sm ghost" data-act="freshseen">Got it</button></div><p class="muted">${(f.missions||[]).filter(m=>m.for==="all"||m.for===S.active).length} new missions, ${(f.games||[]).length} new games, ${(f.quests||[]).length} new brave things.</p><div class="row"><button class="btn primary" data-tab="missions">See missions</button><button class="btn" data-tab="games">See games</button></div></section>`})()}
   <section class="card stack">
     <div class="row between"><h2>What's your weather?</h2>${ci.weather?`<span class="pill kid">Logged</span>`:""}</div>
     <div class="weather">${Object.entries(WX).map(([id,w])=>`<button class="wx" data-wx="${id}" aria-pressed="${ci.weather===id}">${w.s}<span>${w.l}</span></button>`).join("")}</div>
@@ -578,6 +580,8 @@ function renderChores(){
     <div class="tip"><div class="n">3</div><div><b>Save or spend. Your call.</b><p class="small">Small rewards now, or save up for the big ones. Saving is a skill too.</p></div></div>
   </section>`;
 }
+function freshDeck(){const F=window.FRESH||[];return F.length?F[0]:null}
+function freshMissions(){const f=freshDeck();if(!f)return [];const k=K();return (f.missions||[]).filter(m=>m.for==="all"||m.for===S.active).filter(m=>!k.missions.some(x=>x.title===m.title))}
 function renderGoalsTab(){
   const seg=`<div class="row" style="gap:8px"><button class="chip" data-gview="smart" aria-pressed="${goalsView==="smart"}" style="min-height:48px;font-size:16px">SMART goals</button><button class="chip" data-gview="missions" aria-pressed="${goalsView==="missions"}" style="min-height:48px;font-size:16px">Missions &amp; focus</button></div>`;
   return seg+(goalsView==="smart"?renderGoals():renderMissions());
@@ -617,6 +621,7 @@ function renderMissions(){
   <div class="row between"><h1>Missions</h1><button class="btn primary" data-act="addmission">+ New mission</button></div>
   <p class="muted">A mission is a goal broken into levels. Master one level before you move to the next.</p>
   ${renderTimer()}
+  ${(()=>{const f=freshDeck(),fm=freshMissions();if(!f||!fm.length)return "";return `<section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>New this week</h2><span class="pill">${esc(f.theme||"")}</span></div><p class="small muted">Fresh missions just dropped. Tap one to launch it.</p>${fm.map((m,i)=>`<div class="reward"><div><b>${esc(m.title)}</b><div class="small muted">${esc(m.type)} · ${m.steps.length} levels</div></div><button class="btn sm primary" data-freshmission="${i}">Launch</button></div>`).join("")}</section>`})()}
   ${open.map(m=>missionCard(m)).join("")}
   ${done.length?`<details class="card"><summary>${done.length} completed mission${done.length>1?"s":""}</summary><div class="stack" style="margin-top:10px">${done.map(m=>`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>${esc(m.title)}</span><span class="pill mint">Done</span></div>`).join("")}</div></details>`:""}
   <section class="card stack">
@@ -683,6 +688,7 @@ function renderGames(){
   return `
   <h1>Games</h1>
   <p class="muted">Play these with a brother, Mom or Dad. They're secretly brain training.</p>
+  ${(()=>{const f=freshDeck();if(!f||!(f.games||[]).length)return "";return `<section class="stack"><h2>New this week</h2><div class="grid2">${f.games.map((gm,i)=>`<div class="gamecard" style="border-top-color:var(--violet)"><h3>${esc(gm.title)}</h3><p class="small">${esc(gm.how)}</p><button class="btn" data-game="fresh${i}">We played it (+${XP.game} XP)</button></div>`).join("")}</div></section>`})()}
   <div class="grid2">
     <div class="gamecard"><h3>Emotion Charades</h3><p class="small muted">Act out the feeling with no words. Others guess. Then ask: what clues gave it away?</p><div class="bigword">${g.emotion||"Tap to draw"}</div><button class="btn primary" data-game="emotion">Draw a feeling</button></div>
     <div class="gamecard"><h3>Talk Cards</h3><p class="small muted">A question for dinner or the car. Everyone answers.</p><div class="bigword" style="font-size:22px">${g.prompt||"Tap to draw"}</div><button class="btn primary" data-game="prompt">Draw a card</button></div>
@@ -840,6 +846,7 @@ function bind(){
   app.querySelectorAll("[data-goaldone]").forEach(b=>b.onclick=()=>{const g=K().goals.find(x=>x.id===b.dataset.goaldone);g.done=true;g.doneAt=today();save();addXP(XP.goal,"GOAL ACHIEVED");setTimeout(()=>addCoins(COINS.goal,"goal bonus"),1200);render()});
   app.querySelectorAll("[data-delgoal]").forEach(b=>b.onclick=()=>{if(b.dataset.confirm){const k=K();k.goals=k.goals.filter(x=>x.id!==b.dataset.delgoal);save();render()}else{b.dataset.confirm="1";b.textContent="Tap again to remove"}});
   app.querySelectorAll("[data-goallaunch]").forEach(b=>b.onclick=()=>{const g=K().goals.find(x=>x.id===b.dataset.goallaunch);modal={type:"mission",title:g.specific,mtype:"Learn",steps:"Level 1: "+g.step+"\nLevel 2: Halfway: "+g.measure.replace(/^I\s/i,"")+" (half)\nLevel 3: "+g.measure};render()});
+  app.querySelectorAll("[data-freshmission]").forEach(b=>b.onclick=()=>{const m=freshMissions()[+b.dataset.freshmission];if(!m)return;K().missions.unshift({id:uid(),title:m.title,type:m.type,steps:m.steps.map(t=>({t,done:false})),done:false,fresh:true});save();toast("Mission launched");render()});
   app.querySelectorAll("[data-sprint]").forEach(b=>b.onclick=()=>startTimer(+b.dataset.sprint,null));
   app.querySelectorAll("[data-focus]").forEach(b=>b.onclick=()=>{const m=K().missions.find(x=>x.id===b.dataset.focus);startTimer(15,m.title)});
   app.querySelectorAll("[data-feel]").forEach(b=>b.onclick=()=>{const inp=document.getElementById("j-felt");const cur=inp.value.split(",").map(s=>s.trim()).filter(Boolean);const f=b.dataset.feel;const i=cur.indexOf(f);if(i>=0)cur.splice(i,1);else cur.push(f);inp.value=cur.join(", ");b.setAttribute("aria-pressed",String(i<0))});
@@ -865,11 +872,12 @@ function act(a,b){
   else if(a==="parent"){if(isParent){tab="parent";render()}else{modal={type:"parentlogin"};render()}}
   else if(a==="parentnow"){S.active=Object.keys(KIDS)[0];tab="parent";render()}
   else if(a==="lockparent"){tab="today";render()}
+  else if(a==="freshseen"){try{localStorage.setItem("fresh-seen",(freshDeck()||{}).week||"")}catch(e){}render()}
   else if(a==="copycode"){copyText(fid,"Family code copied")}
   else if(a==="signout"){const p=pref();auth.signOut().then(()=>{isParent=false;tab="today";S.active=null;gateView="home";if(p.kidDevice&&p.fid){auth.signInAnonymously()}else{setPref({fid:null,kidDevice:false});fid=null;stopSync()}render()})}
   else if(a==="closemodal"){modal=null;render()}
   else if(a==="questdone"){k.quest[t+"_done"]=true;save();addXP(XP.step,"brave thing");setTimeout(()=>addCoins(COINS.brave,"brave thing"),1200);render()}
-  else if(a==="questnew"){k.quest[t]=QUESTS[(QUESTS.indexOf(k.quest[t])+1+Math.floor(Math.random()*(QUESTS.length-1)))%QUESTS.length];delete k.quest[t+"_done"];save();render()}
+  else if(a==="questnew"){const QP=QUESTS.concat(((freshDeck()||{}).quests)||[]);k.quest[t]=QP[(QP.indexOf(k.quest[t])+1+Math.floor(Math.random()*(QP.length-1)))%QP.length];delete k.quest[t+"_done"];save();render()}
   else if(a==="addhabit"){modal={type:"habit"};render()}
   else if(a==="addmission"){modal={type:"mission",mtype:"Learn"};render()}
   else if(a==="canceltimer"){clearInterval(timerState.iv);timerState=null;render()}
