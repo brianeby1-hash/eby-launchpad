@@ -795,7 +795,20 @@ function weekDate(s,w){const d=new Date(s.start+"T12:00:00");d.setDate(d.getDate
 function ksea0(k,s){return ((k&&k.seasons)||{})[s.id]||{}}
 function ksea(k,s){k.seasons=k.seasons||{};return k.seasons[s.id]||(k.seasons[s.id]={})}
 function fillPick(t,p){return String(t||"").replace(/\{pick\}/g,p||"your pick")}
-function quizScores(ans){const sc={};Object.keys(TR()).forEach(x=>sc[x]=0);(window.SEASON_QUIZ||[]).forEach(q=>{const o=q.opts[parseInt(ans[q.id])];if(o)Object.entries(o.s).forEach(([t,n])=>sc[t]=(sc[t]||0)+n)});return sc}
+function profileSignals(pr){
+  const r={business:[],speaking:[],hard:[]};if(!pr)return r;const has=(a,x)=>(pr[a]||[]).includes(x),txt=String(pr.grow||"").toLowerCase()+" "+String(pr.good||"").toLowerCase();
+  if(has("interests","Sports")||(pr.move||[]).length>=3)r.hard.push("sports and moving");
+  if(focusAreas(pr).includes("grit"))r.hard.push("not quitting when it's hard");
+  if(["Building & LEGO","Art","Cooking"].some(x=>has("interests",x)))r.business.push("making things");
+  if(focusAreas(pr).includes("money"))r.business.push("money smarts");
+  if(/business|boss|ceo|owner|sell|store|shop|money|rich/.test(txt))r.business.push("running a business someday");
+  if(pr.social==="Easy")r.speaking.push("talking to new people");
+  if(focusAreas(pr).includes("confidence"))r.speaking.push("confidence with people");
+  if(/youtub|teach|lawyer|actor|host|announc|news|speak|preach|president/.test(txt))r.speaking.push("a job talking to people");
+  if(/athlete|player|pro |soccer|football|basketball|baseball|runner|swim|ninja/.test(txt))r.hard.push("being an athlete");
+  return r;
+}
+function quizScores(ans){const sc={};Object.keys(TR()).forEach(x=>sc[x]=0);(window.SEASON_QUIZ||[]).forEach(q=>{const o=q.opts[parseInt(ans[q.id])];if(o)Object.entries(o.s).forEach(([t,n])=>sc[t]=(sc[t]||0)+n)});const ps=profileSignals((K()||{}).profile);Object.keys(ps).forEach(t=>{if(sc[t]!=null)sc[t]+=ps[t].length});return sc}
 function suggestTrack(ans){const sc=quizScores(ans);const d=(curSeason()||{}).defaults||{};return Object.keys(sc).sort((a,b)=>sc[b]-sc[a]||(b===d[S.active])-(a===d[S.active]))[0]}
 function trackPicks(tr,id){const age=(KIDS[id]||{}).age||10;return ((TR()[tr]||{}).picks||[]).filter(p=>(p.ageMin==null||age>=p.ageMin)&&(p.ageMax==null||age<=p.ageMax))}
 function focusMs(s,se){const c=curIdx(s);const ms=se.ms||[];for(let i=0;i<=c;i++)if(ms[i]&&ms[i].status!=="done")return i;return c}
@@ -880,7 +893,7 @@ function seasonParentKid(id){
   const s=curSeason();if(!s)return "";const k=ensureKid(id),se=ksea0(k,s),d=(s.defaults||{})[id],tr=se.track||d,st=se.stock||{};
   const opts=Object.entries(TR()).map(([key,x])=>`<button type="button" class="chip" data-single="ss-track-${id}" data-val="${key}" aria-pressed="${tr===key}">${esc(x.name)}${key===d?" (plan)":""}${key===se.suggested?" (quiz)":""}</button>`).join("");
   return `<h3>Season</h3>
-    ${se.quiz?`<p class="small muted">Quiz suggested <b>${esc((TR()[se.suggested]||{}).name||"")}</b>. He picked <b>${esc((TR()[se.track]||{}).name||"")}</b>: ${esc(se.pick||"")}.</p>`:`<p class="small muted">${KIDS[id].name} hasn't taken the Season Picker yet. You can still set his season here.</p>`}
+    ${se.quiz?`<p class="small muted">Quiz suggested <b>${esc((TR()[se.suggested]||{}).name||"")}</b>. He picked <b>${esc((TR()[se.track]||{}).name||"")}</b>: ${esc(se.pick||"")}.${se.scores?` <br>Scores: ${Object.entries(se.scores).map(([t,n])=>esc((TR()[t]||{}).name||t)+" "+n).join(" · ")}`:""}${(()=>{const w=Object.entries(profileSignals(k.profile)).filter(([t,x])=>x.length).map(([t,x])=>esc((TR()[t]||{}).name||t)+": "+x.map(esc).join(", "));return w.length?`<br>From About Me: ${w.join(" · ")}`:""})()}</p>`:`<p class="small muted">${KIDS[id].name} hasn't taken the Season Picker yet. You can still set his season here.</p>`}
     <form class="stack" data-form="seasonset"><input type="hidden" name="kid" value="${id}">
       <label class="f">Skill<div class="chips">${opts}</div><input type="hidden" id="ss-track-${id}" name="track" value="${esc(tr||"")}"></label>
       <label class="f">His specific pick<input class="t" name="pick" value="${esc(se.pick||"")}" placeholder="${esc(((trackPicks(tr,id)[0])||{}).t||"")}"></label>
@@ -906,7 +919,7 @@ function renderModal(){
     const sug=m.sug,trk=m.track||sug,T=TR()[trk]||{},d=(s.defaults||{})[S.active],picks=trackPicks(trk,S.active);
     return `<div class="modal" data-close><div class="card">
       <div class="row between"><h2>Your season</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
-      <p>Your answers say <b style="color:${(TR()[sug]||{}).color}">${esc((TR()[sug]||{}).name||"")}</b> fits you best.${d&&d!==sug?` Dad's plan was <b>${esc((TR()[d]||{}).name||"")}</b>. Pick the one you want to own.`:""}</p>
+      <p>Your answers say <b style="color:${(TR()[sug]||{}).color}">${esc((TR()[sug]||{}).name||"")}</b> fits you best.${(()=>{const w=profileSignals(K().profile)[sug]||[];return w.length?` Your About Me counted too: ${w.map(esc).join(", ")}.`:""})()}${d&&d!==sug?` Dad's plan was <b>${esc((TR()[d]||{}).name||"")}</b>. Pick the one you want to own.`:""}</p>
       <div class="stack" style="margin-top:10px;gap:8px">${Object.entries(TR()).map(([key,x])=>`<button type="button" class="coachopt ${key===trk?"picked":""}" data-strack="${key}"><b style="color:${x.color}">${esc(x.name)}</b> · ${esc(x.tagline)}${key===sug?` <span class="pill sun">Suggested</span>`:""}${key===d&&key!==sug?` <span class="pill">Dad's plan</span>`:""}</button>`).join("")}</div>
       <form class="stack" data-form="seasonpick" style="margin-top:16px;gap:16px">
         <label class="f">${esc(T.pickQ||"What exactly will you do?")}<div class="chips">${picks.map(p=>`<button type="button" class="chip" data-single="sp-pick" data-val="${esc(p.t)}" aria-pressed="${se.pick===p.t}">${esc(p.t)}</button>`).join("")}</div><input type="hidden" id="sp-pick" name="pick" value="${esc(picks.some(p=>p.t===se.pick)?se.pick:"")}"></label>
@@ -1129,7 +1142,7 @@ function submit(f){
   else if(f.dataset.form==="chore"){const kk=ensureKid(modal.kid);kk.chores.push({id:uid(),name:d.name.trim(),pts:Math.max(1,parseInt(d.pts)||1),freq:d.freq,day:+d.day});save();modal=null;render()}
   else if(f.dataset.form==="reward"){S.rewards.push({id:uid(),name:d.name.trim(),cost:Math.max(1,parseInt(d.cost)||1)});save();modal=null;render()}
   else if(f.dataset.form==="seasonquiz"){const ans={};(window.SEASON_QUIZ||[]).forEach(q=>{if(d[q.id]!==""&&d[q.id]!=null)ans[q.id]=+d[q.id]});if(Object.keys(ans).length<2){toast("Answer a few more first");return}modal={type:"seasonquiz",step:2,ans,sug:suggestTrack(ans),track:null};render()}
-  else if(f.dataset.form==="seasonpick"){const s=curSeason();const pick=((d.own||"").trim()||d.pick||"").trim();if(!pick){toast("Tap one, or type your own idea");return}const se=ksea(k,s);const first=!se.track;const trk=modal.track||modal.sug;if(se.status==="active"&&se.track!==trk){toast("Your season is already locked in");modal=null;render();return}se.track=trk;se.pick=pick;se.quiz=modal.ans;se.suggested=modal.sug;if(se.status!=="active")se.status="proposed";if((d.co||"").trim())se.stock={...(se.stock||{}),co:d.co.trim()};save();modal=null;if(first)addXP(SXP.pick,"season picked");else toast("Sent");render()}
+  else if(f.dataset.form==="seasonpick"){const s=curSeason();const pick=((d.own||"").trim()||d.pick||"").trim();if(!pick){toast("Tap one, or type your own idea");return}const se=ksea(k,s);const first=!se.track;const trk=modal.track||modal.sug;if(se.status==="active"&&se.track!==trk){toast("Your season is already locked in");modal=null;render();return}se.track=trk;se.pick=pick;se.quiz=modal.ans;se.suggested=modal.sug;se.scores=quizScores(modal.ans);if(se.status!=="active")se.status="proposed";if((d.co||"").trim())se.stock={...(se.stock||{}),co:d.co.trim()};save();modal=null;if(first)addXP(SXP.pick,"season picked");else toast("Sent");render()}
   else if(f.dataset.form==="stockco"){const se=ksea(k,curSeason());se.stock={...(se.stock||{}),co:d.co.trim()};save();toast("Stock picked: "+d.co.trim());render()}
   else if(f.dataset.form==="seasonset"){lockSeason(d.kid,d.track,d.pick)}
   else if(f.dataset.form==="habit"){if(modal.habit&&modal.habit.id){Object.assign(modal.habit,{name:d.name.trim(),cue:d.cue.trim(),identity:d.identity.trim()})}else k.habits.push({id:uid(),name:d.name.trim(),cue:d.cue.trim(),identity:d.identity.trim(),done:[]});save();modal=null;render()}
