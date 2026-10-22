@@ -238,6 +238,55 @@ const COINS={goal:20,mission:25,goalset:5,journal:3,allhabits:5,brave:3,sprint:5
 const INTERESTS=["Sports","Building & LEGO","Art","Music","Reading","Animals","Science","Cooking","Outdoors","Math","Writing","Video games"];
 const CALM_CHOICES=["A hug","Being alone for a bit","Moving my body","Talking it out","Music","Deep breaths","Cold water","Drawing"];
 const IDEAS={"Sports":["Make 10 free throws in a row","Run a mile without stopping"],"Building & LEGO":["Build something with no instructions and show the family","Design and build a marble run"],"Art":["Draw the same thing every day for a week and compare","Make a birthday card for someone, start to finish"],"Music":["Learn one song all the way through","Play a song for the family at dinner"],"Reading":["Read a book over 150 pages","Read to a brother 5 nights in a row"],"Animals":["Teach the dog a new trick","Be in charge of feeding the dogs for a week"],"Science":["Do an experiment and explain what happened","Grow something from a seed"],"Cooking":["Cook breakfast for the family","Learn 3 recipes by heart"],"Outdoors":["Hike a new trail with the family","Build a fort outside that lasts a week"],"Math":["Learn all the multiplication facts to 12","Teach a brother a math trick"],"Writing":["Write a 2-page story and read it aloud","Keep a journal for 7 days straight"],"Video games":["Beat a hard level with no help, then teach someone","Go 3 school days with zero game time and notice how you feel"]};
+const QBANK=[
+ {sec:"About you"},
+ {id:"interests",q:"What are you into right now?",type:"multi",opts:INTERESTS},
+ {id:"good",q:"What's something you're really good at?",type:"text",ph:"Soccer, making people laugh, LEGO..."},
+ {id:"hard",q:"What's something hard you want to get better at?",type:"text",ph:"Reading faster, free throws, not getting mad..."},
+ {id:"grow",q:"What do you want to be when you grow up? (this week's answer)",type:"text",ph:"Pro skater / engineer / vet"},
+ {sec:"How you work"},
+ {id:"stuck",q:"When something is hard, I usually...",type:"single",opts:["Keep trying","Ask for help","Take a break and come back","Give up for now"]},
+ {id:"learn",q:"I learn best by...",type:"single",opts:["Watching someone do it","Trying it myself","Someone explaining it","Reading about it"]},
+ {id:"focus",q:"How long can I focus on hard stuff before I need a break?",type:"single",opts:["5 minutes","10 minutes","15 minutes","25 minutes or more"]},
+ {id:"besttime",q:"Best time for me to do hard stuff:",type:"single",opts:["Right after school","After dinner","In the morning","On the weekend"]},
+ {id:"chrono",q:"Morning person or night owl?",type:"single",opts:["Morning person","Night owl","Both","Neither!"]},
+ {sec:"Feelings"},
+ {id:"calm",q:"When you have a big feeling, what helps you calm down?",type:"multi",opts:CALM_CHOICES},
+ {id:"bigfeel",q:"My biggest feeling this month has been...",type:"single",opts:["Happy","Excited","Nervous","Frustrated","Bored","Sad"]},
+ {id:"mad",q:"What makes me the maddest?",type:"single",opts:["Losing","Being told what to do","Brothers bugging me","Not being listened to","Homework","Things not going my way"]},
+ {id:"friend",q:"When a friend is sad, I...",type:"single",opts:["Try to cheer them up","Sit with them","Don't know what to do","Tell a grown-up"]},
+ {sec:"People"},
+ {id:"social",q:"Talking to new people is...",type:"single",opts:["Easy","A little scary","Really scary"]},
+ {id:"brothers",q:"My brothers and I...",type:"single",opts:["Get along great","Fight sometimes","Fight a lot"]},
+ {id:"hero",q:"Who do you look up to, and why?",type:"text",ph:"Grandpa, because he can fix anything"},
+ {id:"together",q:"Favorite way to spend time with Dad or Mom?",type:"text",ph:"Fishing, cooking, bike rides..."},
+ {sec:"Money & rewards"},
+ {id:"money",q:"If someone handed you $20, you'd...",type:"single",opts:["Spend it right away","Spend some, save some","Save all of it","Give some of it away"]},
+ {id:"reward",q:"What's a reward you'd work really hard for?",type:"text",ph:"A trip to the trampoline park"},
+ {sec:"Body"},
+ {id:"move",q:"Favorite ways to move:",type:"multi",opts:["Soccer","Basketball","Biking","Swimming","Running","Climbing","Wrestling around","Dancing","Hiking","Skating"]},
+ {id:"sleep",q:"Going to bed is...",type:"single",opts:["Easy, I'm tired","Hard, I'm not tired","Hard, my brain won't stop"]}
+];
+const FOCUS_LABELS={grit:"Keep going when it's hard",help:"Ask for help sooner",confidence:"Confidence with people",empathy:"Reading other people's feelings",calm:"Cooling down big feelings",kindness:"Brothers & kindness",money:"Money smarts",focus:"Focus time",losing:"Losing well",body:"Moving every day"};
+function focusAreas(pr){
+  if(!pr)return [];const f=[];
+  if(pr.stuck==="Give up for now")f.push("grit");if(pr.stuck==="Keep trying"&&pr.learn!=="Someone explaining it")f.push("help");
+  if(pr.social==="A little scary"||pr.social==="Really scary")f.push("confidence");
+  if(pr.friend==="Don't know what to do"||pr.friend==="Tell a grown-up")f.push("empathy");
+  if(["Frustrated","Nervous","Sad"].includes(pr.bigfeel))f.push("calm");
+  if(pr.brothers==="Fight sometimes"||pr.brothers==="Fight a lot"||pr.mad==="Brothers bugging me")f.push("kindness");
+  if(pr.money==="Spend it right away")f.push("money");
+  if(pr.focus==="5 minutes"||pr.focus==="10 minutes")f.push("focus");
+  if(pr.mad==="Losing")f.push("losing");
+  if(!(pr.move||[]).length&&!(pr.interests||[]).includes("Sports"))f.push("body");
+  return [...new Set(f)];
+}
+const FOCUS_IDEAS={grit:["Pick one hard thing and practice it 10 minutes a day for 7 days","Finish a puzzle or build you quit on before"],help:["Ask a teacher one question you were too shy to ask","Learn something new by asking someone to show you"],confidence:["Order my own food 3 times and look the server in the eye","Introduce myself to one new kid and learn their name"],empathy:["Notice one person who looks left out each day for a week, and say hi","Ask a brother how his day was and listen for a whole minute"],calm:["Use my calm-down trick before I blow up, 5 times","Fill in the feelings thermometer every day for a week"],kindness:["Do one secret nice thing for a brother every day for a week","Go 3 days without fighting with my brothers"],money:["Save $10 before spending any of it","Earn $5 doing a job and put half in savings"],focus:["Do a 10-minute focus sprint 5 days in a row","Finish homework with the iPad in another room for a week"],losing:["Lose 3 games and say 'good game' every time","Play a game with a brother and let him pick the game"],body:["Move my body 20 minutes a day for a week","Learn a new sport skill and show the family"]};
+const FOCUS_QUESTS={grit:["Try the hard thing one more time before you ask for help.","Do the hard part of your homework first."],help:["Ask for help on one thing today instead of guessing."],confidence:["Say hi first to someone today.","Raise your hand once in class even if you're not sure."],empathy:["Notice how a brother is feeling and say it out loud: 'You seem frustrated.'","Ask someone 'what was the best part of your day?' and listen."],calm:["When you hit a 3 on the thermometer, use your calm-down trick before saying anything.","Name your feeling out loud once today."],kindness:["Do something nice for a brother without telling him it was you.","Let a brother go first at something today."],money:["Put any money you get today straight into your jar.","Don't buy anything today, even if you want to."],focus:["Do one 10-minute focus sprint with no breaks.","Put the iPad in another room for homework."],losing:["Play a game and if you lose, say 'good game' and mean it."],body:["Move your body for 20 minutes outside.","Do 20 jumping jacks before breakfast."]};
+const FOCUS_HABITS={grit:{name:"Try one hard thing for 5 minutes",cue:"After snack",identity:"someone who doesn't quit"},help:{name:"Ask one question",cue:"At school",identity:"someone who's not afraid to ask"},confidence:{name:"Say hi first to one person",cue:"When I get to school",identity:"a confident kid"},empathy:{name:"Ask someone how they're feeling",cue:"At dinner",identity:"a good friend"},calm:{name:"Check my thermometer",cue:"After school",identity:"someone who knows my feelings"},kindness:{name:"One kind thing for a brother",cue:"Before bed",identity:"a good brother"},money:{name:"Put coins in my jar",cue:"When I get money",identity:"a saver"},focus:{name:"10-minute focus sprint",cue:"After I start homework",identity:"someone who can focus"},losing:{name:"Say 'good game' after I lose",cue:"After any game",identity:"a good sport"},body:{name:"Move 20 minutes",cue:"After school",identity:"a strong, healthy kid"}};
+const GAME_TAGS={emotion:["empathy","calm"],prompt:["empathy","kindness"],cape:["confidence"],detective:["empathy"],eyes:["confidence"],handshake:["kindness","calm"]};
+function myFocus(){return focusAreas(K().profile)}
+function sprintDefault(){const f=(K().profile||{}).focus;return f==="5 minutes"?5:f==="10 minutes"?10:f==="15 minutes"?15:25}
 const WIN_CATS=["Helped someone","Kind","Brave","Worked hard","Honest","Good teammate","Other"];
 const WIN_SPARKS=["Did you include someone who was left out?","Did you finish something hard without being asked?","Did you tell the truth when it was tough?","Did you help a brother, a teacher, or a neighbor?","Did you keep going after a mistake?","Did you share, hold a door, or say thank you first?"];
 const STARTER_CHORES={
@@ -457,7 +506,7 @@ function renderToday(){
   const k=K();migrateGoals(k);const t=today(),ci=k.checkins[t]||{},kid=KIDS[S.active];
   const doneToday=k.habits.filter(h=>h.done.includes(t)).length;
   const hour=new Date().getHours();const greet=hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
-  const QPOOL=QUESTS.concat(((freshDeck()||{}).quests)||[]);const quest=k.quest[t]||(k.quest[t]=QPOOL[Math.floor(Math.random()*QPOOL.length)],save(),k.quest[t]);
+  const FQ=myFocus().flatMap(x=>FOCUS_QUESTS[x]||[]);const QPOOL=(FQ.length&&Math.random()<0.6?FQ:QUESTS.concat(((freshDeck()||{}).quests)||[]));const quest=k.quest[t]||(k.quest[t]=QPOOL[Math.floor(Math.random()*QPOOL.length)],save(),k.quest[t]);
   const temp=ci.temp;
   return `
   <section class="hero">
@@ -473,7 +522,7 @@ function renderToday(){
     <div class="row between small muted"><span>1 = calm</span><span>3 = frustrated</span><span>5 = furious</span></div>
     ${temp?`<div class="card soft stack"><b>${temp>=4?"Big feeling. That's OK. Let's move down one number:":temp===3?"Let's move down one number:":"Nice. Keep it there:"}</b>${(k.profile&&k.profile.calm||[]).length&&temp>=3?`<p class="small"><b>Your go-to:</b> ${k.profile.calm.map(esc).join(" · ")}</p>`:""}<ul style="margin:0;padding-left:20px">${CALM_IDEAS[temp].map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}
   </section>
-  ${k.profile?"":`<section class="card stack" style="border-left:8px solid var(--mint)"><h2>Tell us about you</h2><p class="muted">8 quick questions. The app uses your answers to pick goal ideas, calm-down tricks and rewards that fit you. +${XP.aboutme} XP.</p><button class="btn primary" data-act="aboutme">Start</button></section>`}
+  ${k.profile?"":`<section class="card stack" style="border-left:8px solid var(--mint)"><h2>Tell us about you</h2><p class="muted">About 20 quick questions, mostly tap-to-answer. The app uses your answers to pick goal ideas, calm-down tricks and rewards that fit you. +${XP.aboutme} XP.</p><button class="btn primary" data-act="aboutme">Start</button></section>`}
   <section class="card stack">
     <div class="row between"><h2>Today's habits</h2><span class="pill mint num">${doneToday}/${k.habits.length}</span></div>
     ${k.habits.length?k.habits.map(h=>habitRow(h,t,true)).join(""):`<p class="muted">No habits yet. Add one in the Habits tab.</p>`}
@@ -506,6 +555,7 @@ function renderHabits(){
   return `
   <div class="row between"><h1>Habits</h1><button class="btn primary" data-act="addhabit">+ New habit</button></div>
   <p class="muted">Don't break the chain. Miss a day? Fine. Never miss twice.</p>
+  ${(()=>{const sug=myFocus().map(x=>FOCUS_HABITS[x]).filter(h=>h&&!k.habits.some(e=>e.name===h.name));return sug.length?`<section class="card stack"><h2>Suggested for you</h2><p class="small muted">From your About Me answers. Tap to add.</p><div class="chips">${sug.map(h=>`<button class="chip" data-sughabit="${esc(h.name)}">${esc(h.name)}</button>`).join("")}</div></section>`:""})()}
   ${k.habits.map(h=>habitRow(h,t,false)).join("")||`<div class="card"><p class="muted">No habits yet.</p></div>`}
   <section class="card stack">
     <h2>How habits actually work</h2>
@@ -540,7 +590,7 @@ function renderGoals(){
   ${f&&fm.length?`<section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>New this week</h2><span class="pill">${esc(f.theme||"")}</span></div><p class="small muted">Fresh goal ideas, steps included. Tap one to take it on.</p>${fm.map((m,i)=>`<div class="reward"><div><b>${esc(m.title)}</b><div class="small muted">${esc(m.type)} · ${m.steps.length} steps</div></div><button class="btn sm primary" data-freshmission="${i}">Take it on</button></div>`).join("")}</section>`:""}
   <section class="card stack">
     <h2>Goal ideas</h2>
-    ${(k.profile&&(k.profile.interests||[]).length)?`<p class="small muted">Picked for you, from what you said you're into:</p><div class="chips">${k.profile.interests.flatMap(i=>IDEAS[i]||[]).slice(0,8).map(q=>`<button class="chip" data-ideagoal="${esc(q)}">${esc(q)}</button>`).join("")}</div>${k.profile.hard?`<p class="small muted">You said you want to get better at <b>${esc(k.profile.hard)}</b>. <button class="btn sm" data-ideagoal="Get better at ${esc(k.profile.hard)}">Make it a goal</button></p>`:""}`:""}
+    ${(k.profile&&(k.profile.interests||[]).length)?`<p class="small muted">Picked for you, from what you said you're into:</p><div class="chips">${k.profile.interests.flatMap(i=>IDEAS[i]||[]).slice(0,8).map(q=>`<button class="chip" data-ideagoal="${esc(q)}">${esc(q)}</button>`).join("")}</div>${myFocus().length?`<p class="small muted" style="margin-top:8px">Your focus areas: <b>${myFocus().map(x=>FOCUS_LABELS[x]).join(" · ")}</b></p><div class="chips">${myFocus().flatMap(x=>FOCUS_IDEAS[x]||[]).slice(0,8).map(q=>`<button class="chip" data-ideagoal="${esc(q)}">${esc(q)}</button>`).join("")}</div>`:""}${k.profile.hard?`<p class="small muted">You said you want to get better at <b>${esc(k.profile.hard)}</b>. <button class="btn sm" data-ideagoal="Get better at ${esc(k.profile.hard)}">Make it a goal</button></p>`:""}`:""}
     <p class="small muted">Real-world skills. Tap one and you'll fill in the steps.</p>
     <div class="chips">${QUESTS.slice(0,8).map((q,i)=>`<button class="chip" data-questmission="${i}">${q.replace(/\.$/,"")}</button>`).join("")}</div>
   </section>
@@ -626,7 +676,7 @@ function renderShine(){
 }
 function renderTimer(){
   const ts=timerState;
-  if(!ts)return `<section class="card stack"><div class="row between"><h2>Focus sprint</h2><span class="pill">${K().sprints.length} done</span></div><p class="small muted">Pick a time, put everything else away, and work on one thing. When the timer ends, you earn ${XP.sprint} XP.</p><div class="row">${[10,15,25].map(m=>`<button class="btn" data-sprint="${m}">${m} min</button>`).join("")}</div></section>`;
+  if(!ts)return `<section class="card stack"><div class="row between"><h2>Focus sprint</h2><span class="pill">${K().sprints.length} done</span></div><p class="small muted">Pick a time, put everything else away, and work on one thing. When the timer ends, you earn ${XP.sprint} XP.</p><div class="row">${[...new Set([sprintDefault(),10,15,25])].map((m,i)=>`<button class="btn ${i===0?"primary":""}" data-sprint="${m}">${m} min${i===0&&K().profile?" (your size)":""}</button>`).join("")}</div></section>`;
   const left=Math.max(0,ts.end-Date.now()),mm=Math.floor(left/60000),ss=Math.floor(left%60000/1000),pct=1-left/(ts.min*60000);
   const r=86,c=2*Math.PI*r;
   return `<section class="card stack" id="timercard">
@@ -637,7 +687,7 @@ function renderTimer(){
 }
 function renderBrave(){
   const k=K(),t=today(),j=k.journal[t]||{};
-  if(!coachRound)coachRound={i:Math.floor(Math.random()*CRITIC.length),picked:null};
+  if(!coachRound){const pr=k.profile||{};let pool=CRITIC.map((c,i)=>i);if(pr.mad==="Losing")pool=[6,6,6].concat(pool);if(pr.social&&pr.social!=="Easy")pool=[7,7].concat(pool);if(pr.stuck==="Give up for now")pool=[2,2,0].concat(pool);coachRound={i:pool[Math.floor(Math.random()*pool.length)],picked:null}}
   const cr=CRITIC[coachRound.i];
   const days=[0,1,2,3,4,5,6].map(i=>daysAgo(i)).filter(d=>k.journal[d]);
   return `
@@ -673,13 +723,14 @@ function renderGames(){
   <h1>Games</h1>
   <p class="muted">Play these with a brother, Mom or Dad. They're secretly brain training.</p>
   ${(()=>{const f=freshDeck();if(!f||!(f.games||[]).length)return "";return `<section class="stack"><h2>New this week</h2><div class="grid2">${f.games.map((gm,i)=>`<div class="gamecard" style="border-top-color:var(--violet)"><h3>${esc(gm.title)}</h3><p class="small">${esc(gm.how)}</p><button class="btn" data-game="fresh${i}">We played it (+${XP.game} XP)</button></div>`).join("")}</div></section>`})()}
+  ${myFocus().length?`<p class="small muted">Picked for you based on your About Me: games with a <span class="pill kid">For you</span> tag work on <b>${myFocus().map(x=>FOCUS_LABELS[x]).join(", ")}</b>.</p>`:""}
   <div class="grid2">
-    <div class="gamecard"><h3>Emotion Charades</h3><p class="small muted">Act out the feeling with no words. Others guess. Then ask: what clues gave it away?</p><div class="bigword">${g.emotion||"Tap to draw"}</div><button class="btn primary" data-game="emotion">Draw a feeling</button></div>
-    <div class="gamecard"><h3>Talk Cards</h3><p class="small muted">A question for dinner or the car. Everyone answers.</p><div class="bigword" style="font-size:22px">${g.prompt||"Tap to draw"}</div><button class="btn primary" data-game="prompt">Draw a card</button></div>
-    <div class="gamecard"><h3>Superhero Cape</h3><p class="small muted">Stand like you're wearing a cape: chin up, shoulders back, spine tall. Hold for 60 seconds. Your body teaches your brain you're safe.</p><div class="bigword num">${g.cape!=null?g.cape:60}</div><button class="btn primary" data-game="cape">${g.capeRunning?"Running...":"Start 60 seconds"}</button></div>
-    <div class="gamecard"><h3>Emotion Detective</h3><p class="small muted">Watch a show or people at a park. Pick someone and answer:</p><ol style="margin:0;padding-left:20px;display:grid;gap:6px"><li>What do you think they're feeling?</li><li>What clues tell you? (face, shoulders, voice)</li><li>What might have happened before?</li></ol><button class="btn" data-game="detective">We played it (+${XP.game} XP)</button></div>
-    <div class="gamecard"><h3>Eye Color Challenge</h3><p class="small muted">Next time you meet someone, find out their eye color without asking. You'll look them in the eye without even trying.</p><button class="btn" data-game="eyes">I did it today (+${XP.game} XP)</button></div>
-    <div class="gamecard"><h3>Secret Handshake</h3><p class="small muted">Make up a 4-move handshake with Dad or Mom. Use it every goodbye. It's a pocket hug you carry all day.</p><button class="btn" data-game="handshake">We made one (+${XP.game} XP)</button></div>
+    <div class="gamecard"><div class="row between"><h3>Emotion Charades</h3>${(GAME_TAGS["emotion"]||[]).some(x=>myFocus().includes(x))?`<span class="pill kid">For you</span>`:""}</div><p class="small muted">Act out the feeling with no words. Others guess. Then ask: what clues gave it away?</p><div class="bigword">${g.emotion||"Tap to draw"}</div><button class="btn primary" data-game="emotion">Draw a feeling</button></div>
+    <div class="gamecard"><div class="row between"><h3>Talk Cards</h3>${(GAME_TAGS["prompt"]||[]).some(x=>myFocus().includes(x))?`<span class="pill kid">For you</span>`:""}</div><p class="small muted">A question for dinner or the car. Everyone answers.</p><div class="bigword" style="font-size:22px">${g.prompt||"Tap to draw"}</div><button class="btn primary" data-game="prompt">Draw a card</button></div>
+    <div class="gamecard"><div class="row between"><h3>Superhero Cape</h3>${(GAME_TAGS["cape"]||[]).some(x=>myFocus().includes(x))?`<span class="pill kid">For you</span>`:""}</div><p class="small muted">Stand like you're wearing a cape: chin up, shoulders back, spine tall. Hold for 60 seconds. Your body teaches your brain you're safe.</p><div class="bigword num">${g.cape!=null?g.cape:60}</div><button class="btn primary" data-game="cape">${g.capeRunning?"Running...":"Start 60 seconds"}</button></div>
+    <div class="gamecard"><div class="row between"><h3>Emotion Detective</h3>${(GAME_TAGS["detective"]||[]).some(x=>myFocus().includes(x))?`<span class="pill kid">For you</span>`:""}</div><p class="small muted">Watch a show or people at a park. Pick someone and answer:</p><ol style="margin:0;padding-left:20px;display:grid;gap:6px"><li>What do you think they're feeling?</li><li>What clues tell you? (face, shoulders, voice)</li><li>What might have happened before?</li></ol><button class="btn" data-game="detective">We played it (+${XP.game} XP)</button></div>
+    <div class="gamecard"><div class="row between"><h3>Eye Color Challenge</h3>${(GAME_TAGS["eyes"]||[]).some(x=>myFocus().includes(x))?`<span class="pill kid">For you</span>`:""}</div><p class="small muted">Next time you meet someone, find out their eye color without asking. You'll look them in the eye without even trying.</p><button class="btn" data-game="eyes">I did it today (+${XP.game} XP)</button></div>
+    <div class="gamecard"><div class="row between"><h3>Secret Handshake</h3>${(GAME_TAGS["handshake"]||[]).some(x=>myFocus().includes(x))?`<span class="pill kid">For you</span>`:""}</div><p class="small muted">Make up a 4-move handshake with Dad or Mom. Use it every goodbye. It's a pocket hug you carry all day.</p><button class="btn" data-game="handshake">We made one (+${XP.game} XP)</button></div>
   </div>
   <section class="card stack"><h2>Big ideas from big books</h2>${BOOK_TIPS.filter(x=>x.src!=="Atomic Habits").map(x=>`<div class="tip"><div class="n" style="font-size:13px">${x.src.split(" ").map(w=>w[0]).join("").slice(0,3)}</div><div><b>${x.t}</b><p class="small">${x.b}</p><p class="small muted">${x.src}</p></div></div>`).join("")}</section>`;
 }
@@ -703,7 +754,7 @@ function renderParent(){
       <div class="stack">${k.habits.map(h=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(h.name)} <span class="small muted">· ${streak(h)} day chain</span></span><button class="btn sm ghost" data-pdelhabit="${id}:${h.id}">Remove</button></div>`).join("")||"<p class='muted small'>None</p>"}</div>
       <div class="row between"><h3>Chores</h3><span class="row" style="gap:6px"><span class="coinpill">${I.coin}${k.coins||0}</span><button class="btn sm ghost" data-coinadj="${id}:10">+10</button><button class="btn sm ghost" data-coinadj="${id}:-10">−10</button><button class="btn sm primary" data-addchore="${id}">+ Chore</button></span></div>
       <div class="stack">${k.chores.map(c=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(c.name)} <span class="small muted">· ${c.freq==="daily"?"daily":c.freq==="weekly"?DAYN[c.day]+"s":"once"} · ${c.pts} coins</span></span><button class="btn sm ghost" data-pdelchore="${id}:${c.id}">Remove</button></div>`).join("")||"<p class='muted small'>None</p>"}</div>
-      ${k.profile?`<details><summary>About ${kid.name} (their answers)</summary><div class="stack small" style="margin-top:8px"><div><b>Into:</b> ${(k.profile.interests||[]).map(esc).join(", ")||"—"}</div><div><b>Good at:</b> ${esc(k.profile.good)||"—"}</div><div><b>Wants to get better at:</b> ${esc(k.profile.hard)||"—"}</div><div><b>Calms down with:</b> ${(k.profile.calm||[]).map(esc).join(", ")||"—"}</div><div><b>Would work hard for:</b> ${esc(k.profile.reward)||"—"} ${k.profile.reward?`<button class="btn sm ghost" data-rewardfrom="${esc(k.profile.reward)}">Add to shop</button>`:""}</div><div><b>Looks up to:</b> ${esc(k.profile.hero)||"—"}</div><div><b>${esc(k.profile.chrono)||"—"}</b></div><div><b>Time with you:</b> ${esc(k.profile.together)||"—"}</div><div><b>Wants to be:</b> ${esc(k.profile.grow)||"—"}</div><div class="muted">Updated ${k.profile.updated||""}</div></div></details>`:`<p class="small muted">${kid.name} hasn't filled out About Me yet.</p>`}
+      ${k.profile?`<details><summary>About ${kid.name} (their answers)</summary><div class="stack small" style="margin-top:8px">${focusAreas(k.profile).length?`<div><b>Focus areas:</b> ${focusAreas(k.profile).map(x=>FOCUS_LABELS[x]).join(", ")}</div>`:""}${QBANK.filter(q=>q.id).map(q=>`<div><b>${esc(q.q)}</b> ${Array.isArray(k.profile[q.id])?(k.profile[q.id].map(esc).join(", ")||"—"):(esc(k.profile[q.id])||"—")}${q.id==="reward"&&k.profile.reward?` <button class="btn sm ghost" data-rewardfrom="${esc(k.profile.reward)}">Add to shop</button>`:""}</div>`).join("")}<div class="muted">Updated ${k.profile.updated||""}</div></div></details>`:`<p class="small muted">${kid.name} hasn't filled out About Me yet.</p>`}
       <h3>Wins</h3>
       <div class="stack">${(k.wins||[]).slice(-5).reverse().map(w=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="small muted num">${w.date.slice(5).replace("-","/")}</span> <b>${esc(w.cat)}</b> · ${esc(w.text)} ${w.status==="approved"?`<span class="coinpill">${I.coin}+${w.coins||0}</span>`:`<span class="pill">pending</span>`}</div>`).join("")||`<p class="muted small">None yet</p>`}</div>
       <h3>Goals</h3>
@@ -752,20 +803,16 @@ function renderModal(){
       </form></div></div>`;
   }
   if(m.type==="aboutme"){
-    const pr=K().profile||{};const chip=(list,name,sel,multi)=>`<div class="chips">${list.map(x=>`<button type="button" class="chip" data-${multi?"multi":"single"}="${name}" data-val="${esc(x)}" aria-pressed="${(multi?(sel||[]).includes(x):sel===x)}">${esc(x)}</button>`).join("")}</div><input type="hidden" id="${name}" name="${name.replace("am-","")}" value="${esc(multi?(sel||[]).join("|"):(sel||""))}">`;
+    const pr=K().profile||{};let n=0;
+    const field=q=>{if(q.sec)return `<h3 style="margin-top:6px;color:var(--kid)">${q.sec}</h3>`;n++;const lab=`${n}. ${esc(q.q)}`;
+      if(q.type==="text")return `<label class="f">${lab}<input class="t" id="am-${q.id}" name="${q.id}" value="${esc(pr[q.id]||"")}" placeholder="${esc(q.ph||"")}"></label>`;
+      const multi=q.type==="multi";const sel=pr[q.id];
+      return `<label class="f">${lab}<div class="chips">${q.opts.map(x=>`<button type="button" class="chip" data-${multi?"multi":"single"}="am-${q.id}" data-val="${esc(x)}" aria-pressed="${multi?(sel||[]).includes(x):sel===x}">${esc(x)}</button>`).join("")}</div><input type="hidden" id="am-${q.id}" name="${q.id}" value="${esc(multi?(sel||[]).join("|"):(sel||""))}"></label>`};
     return `<div class="modal" data-close><div class="card">
       <div class="row between"><h2>About me</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
-      <p class="small muted">No wrong answers. You can change these any time.</p>
+      <p class="small muted">Tap your answers. No wrong ones. Skip any you want. The app uses these to pick games, goals and brave things that fit you.</p>
       <form class="stack" data-form="aboutme" style="margin-top:12px;gap:16px">
-        <label class="f">1. What are you into right now? (pick all that fit)${chip(INTERESTS,"am-interests",pr.interests,true)}</label>
-        <label class="f">2. What's something you're really good at?<input class="t" id="am-good" name="good" value="${esc(pr.good)}" placeholder="Soccer, making people laugh, LEGO..."></label>
-        <label class="f">3. What's something hard you want to get better at?<input class="t" id="am-hard" name="hard" value="${esc(pr.hard)}" placeholder="Reading faster, free throws, not getting mad..."></label>
-        <label class="f">4. When you have a big feeling, what helps you calm down?${chip(CALM_CHOICES,"am-calm",pr.calm,true)}</label>
-        <label class="f">5. What's a reward you'd work really hard for?<input class="t" id="am-reward" name="reward" value="${esc(pr.reward)}" placeholder="A trip to the trampoline park"></label>
-        <label class="f">6. Who do you look up to, and why?<input class="t" id="am-hero" name="hero" value="${esc(pr.hero)}" placeholder="Grandpa, because he can fix anything"></label>
-        <label class="f">7. Morning person or night owl?${chip(["Morning person","Night owl","Both","Neither!"],"am-chrono",pr.chrono,false)}</label>
-        <label class="f">8. Favorite way to spend time with Dad or Mom?<input class="t" id="am-together" name="together" value="${esc(pr.together)}" placeholder="Fishing, cooking, bike rides..."></label>
-        <label class="f">Bonus: what do you want to be when you grow up? (this week's answer)<input class="t" id="am-grow" name="grow" value="${esc(pr.grow)}" placeholder="Pro skater / engineer / vet"></label>
+        ${QBANK.map(field).join("")}
         <button class="btn primary block" type="submit">Save (+${XP.aboutme} XP)</button>
       </form></div></div>`;
   }
@@ -848,6 +895,7 @@ function bind(){
   app.querySelectorAll("[data-gstep]").forEach(b=>b.onclick=()=>{const [gid,i]=b.dataset.gstep.split(":");const g=K().goals.find(x=>x.id===gid);const st=g.steps[+i];st.done=!st.done;st.doneAt=st.done?today():null;save();if(st.done)addXP(XP.goalstep,"step done");render()});
   app.querySelectorAll("[data-addstep]").forEach(b=>b.onclick=()=>{modal={type:"addstep",gid:b.dataset.addstep};render()});
   app.querySelectorAll("[data-checkin]").forEach(b=>b.onclick=()=>{modal={type:"checkin",gid:b.dataset.checkin};render()});
+  app.querySelectorAll("[data-sughabit]").forEach(b=>b.onclick=()=>{const h=Object.values(FOCUS_HABITS).find(x=>x.name===b.dataset.sughabit);if(!h)return;K().habits.push({id:uid(),name:h.name,cue:h.cue,identity:h.identity,done:[]});save();toast("Habit added");render()});
   app.querySelectorAll("[data-ideagoal]").forEach(b=>b.onclick=()=>{modal={type:"goal",title:b.dataset.ideagoal,steps:""};render()});
   app.querySelectorAll("[data-questmission]").forEach(b=>b.onclick=()=>{modal={type:"goal",title:QUESTS[+b.dataset.questmission].replace(/\.$/,""),steps:"Make a plan\nDo it once\nDo it again, better"};render()});
   app.querySelectorAll("[data-chore]").forEach(b=>b.onclick=()=>{const k=K(),t=today(),c=k.chores.find(x=>x.id===b.dataset.chore);const e=choreEntry(k,c.id,t);if(e){if(e.status==="pending"){k.choreLog=k.choreLog.filter(x=>x!==e);save();render()}return}const entry={id:uid(),chore:c.id,name:c.name,pts:c.pts,date:t,status:S.approve?"pending":"approved"};k.choreLog.push(entry);save();if(S.approve)toast("Nice. A parent will check it.");else addCoins(c.pts,c.name);render()});
@@ -896,7 +944,7 @@ function act(a,b){
   else if(a==="signout"){const p=pref();auth.signOut().then(()=>{isParent=false;tab="today";S.active=null;gateView="home";if(p.kidDevice&&p.fid){auth.signInAnonymously()}else{setPref({fid:null,kidDevice:false});fid=null;stopSync()}render()})}
   else if(a==="closemodal"){modal=null;render()}
   else if(a==="questdone"){k.quest[t+"_done"]=true;save();addXP(XP.step,"brave thing");setTimeout(()=>addCoins(COINS.brave,"brave thing"),1200);render()}
-  else if(a==="questnew"){const QP=QUESTS.concat(((freshDeck()||{}).quests)||[]);k.quest[t]=QP[(QP.indexOf(k.quest[t])+1+Math.floor(Math.random()*(QP.length-1)))%QP.length];delete k.quest[t+"_done"];save();render()}
+  else if(a==="questnew"){const QP=QUESTS.concat(((freshDeck()||{}).quests)||[]).concat(myFocus().flatMap(x=>FOCUS_QUESTS[x]||[]));k.quest[t]=QP[(QP.indexOf(k.quest[t])+1+Math.floor(Math.random()*(QP.length-1)))%QP.length];delete k.quest[t+"_done"];save();render()}
   else if(a==="addhabit"){modal={type:"habit"};render()}
   else if(a==="aboutme"){modal={type:"aboutme"};render()}
   else if(a==="addgoal"){modal={type:"goal"};render()}
@@ -932,7 +980,7 @@ function submit(f){
   else if(f.dataset.form==="goal"){const steps=d.steps.split("\n").map(x=>x.replace(/^\s*(step\s*)?\d+\s*[:.)-]\s*/i,"").trim()).filter(Boolean);if(!steps.length){toast("Add at least one step");return}k.goals=k.goals||[];k.goals.unshift({id:uid(),title:d.title.trim(),why:(d.why||"").trim(),due:d.due||null,steps:steps.map(t=>({t,done:false})),done:false,created:t,checkins:[]});save();modal=null;addXP(XP.goalset,"new goal");setTimeout(()=>addCoins(COINS.goalset,"for setting a goal"),1200);render()}
   else if(f.dataset.form==="addstep"){const g=k.goals.find(x=>x.id===modal.gid);if(g&&d.text.trim()){g.steps.push({t:d.text.trim(),done:false});save()}modal=null;render()}
   else if(f.dataset.form==="checkin"){const g=k.goals.find(x=>x.id===modal.gid);if(g){g.checkins=g.checkins||[];g.checkins.push({week:weekStart(),date:t,rating:d.rating||"Made progress",pct:goalPct(g),note:(d.note||"").trim(),next:(d.next||"").trim()});if(d.next&&d.next.trim()&&!g.steps.some(x=>x.t.toLowerCase()===d.next.trim().toLowerCase()))g.steps.push({t:d.next.trim(),done:false});save();addXP(XP.checkinGoal,"weekly check-in")}modal=null;render()}
-  else if(f.dataset.form==="aboutme"){const first=!k.profile;k.profile={interests:(d.interests||"").split("|").filter(Boolean),good:(d.good||"").trim(),hard:(d.hard||"").trim(),calm:(d.calm||"").split("|").filter(Boolean),reward:(d.reward||"").trim(),hero:(d.hero||"").trim(),chrono:d.chrono||"",grow:(d.grow||"").trim(),together:(d.together||"").trim(),updated:t};save();modal=null;if(first)addXP(XP.aboutme,"About Me done");else toast("Updated");render()}
+  else if(f.dataset.form==="aboutme"){const first=!k.profile;const pr={updated:t};QBANK.filter(q=>q.id).forEach(q=>{const v=d[q.id]||"";pr[q.id]=q.type==="multi"?v.split("|").filter(Boolean):v.trim()});k.profile=pr;save();modal=null;if(first)addXP(XP.aboutme,"About Me done");else toast("Updated");render()}
   else if(f.dataset.form==="win"){k.wins=k.wins||[];k.wins.push({id:uid(),date:t,cat:d.cat,text:d.text.trim(),who:(d.who||"").trim(),status:"pending",coins:0});save();addXP(COINS.winXP,"posted a win");document.querySelector(".main").scrollTop=0;render()}
   else if(f.dataset.form==="chore"){const kk=ensureKid(modal.kid);kk.chores.push({id:uid(),name:d.name.trim(),pts:Math.max(1,parseInt(d.pts)||1),freq:d.freq,day:+d.day});save();modal=null;render()}
   else if(f.dataset.form==="reward"){S.rewards.push({id:uid(),name:d.name.trim(),cost:Math.max(1,parseInt(d.cost)||1)});save();modal=null;render()}
