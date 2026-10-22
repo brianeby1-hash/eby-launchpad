@@ -4,6 +4,25 @@
 // Types: Learn, Build, Body, Brave, Money, Life skill, Kindness. Keep steps to 3-4 levels, easiest first.
 window.FRESH = [
   {
+    week: "2026-10-22",
+    theme: "Leaf Pile Legends",
+    missions: [
+      {for:"kellan", title:"Run a Saturday leaf-raking business on our street", type:"Money", steps:["Decide your price per yard and write it on a flyer","Knock on 3 neighbor doors with Dad nearby and make your pitch out loud","Rake at least one yard start to finish (bag the leaves too)","Split your money: some to save, some to spend, some to give, and write down why"]},
+      {for:"rowan", title:"Give a 2-minute talk at dinner about your favorite animal", type:"Brave", steps:["Pick the animal and find 3 cool facts about it from a book","Practice saying it to a dog first (they are great listeners)","Stand up at dinner, say it to the whole family, and look at people while you talk","Take one question from a brother and answer it"]},
+      {for:"holden", title:"Build a fort for the dogs out of blankets and chairs", type:"Build", steps:["Pick a spot and gather 4 chairs and 3 blankets","Build it so the roof does not fall when a dog goes in","Put a dog bed or towel inside and invite a dog in","Draw a picture of your fort and tape it to the fridge"]},
+      {for:"all", title:"Family Fitness Streak: 5 days in a row", type:"Body", steps:["Pick one move everyone can do (jumping jacks, wall sit, bear crawl)","Do it together for 2 minutes every day right after school","If someone misses a day, nobody quits: just never miss twice","Day 5: do it outside in the leaves and take a victory lap around the yard"]}
+    ],
+    games: [
+      {title:"Feelings Thermometer", how:"One person names a thing that happened today. Everyone holds up fingers 1 to 5 for how big the feeling was, then says what word fits it: annoyed, nervous, pumped, proud, bummed. Guess each other's number first."},
+      {title:"Coach or Critic?", how:"One person says a sentence like 'I messed up my spelling test.' The next person answers twice: once as the mean Critic voice, once as the Coach voice. Everyone votes which one they would want in their head."}
+    ],
+    quests: [
+      "Order your own food at a restaurant or drive-thru window, loud and clear, with no help.",
+      "Pet the dogs and tell them one thing you are not good at YET and one thing you are going to practice.",
+      "Introduce yourself to a kid you do not know at school or practice and ask them their name."
+    ]
+  },
+  {
     week: "2026-10-21",
     theme: "Liftoff week",
     missions: [
