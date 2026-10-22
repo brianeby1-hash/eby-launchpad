@@ -223,7 +223,7 @@ const KIDS={
   holden:{name:"Holden",color:"#8A5CF6",age:7}
 };
 const LEVELS=[[0,"Cadet"],[150,"Explorer"],[400,"Pilot"],[800,"Navigator"],[1400,"Commander"],[2200,"Captain"],[3200,"Admiral"],[4500,"Legend"]];
-const XP={goalset:15,goal:75,checkin:10,habit:5,journal:20,sprint:25,step:10,mission:100,coach:10,game:5};
+const XP={aboutme:30,goalset:15,goal:100,checkinGoal:15,goalstep:10,checkin:10,habit:5,journal:20,sprint:25,step:10,mission:100,coach:10,game:5};
 const STARTER_HABITS={
   kellan:[{name:"Read 20 minutes",cue:"After I finish homework",identity:"someone who loves to learn"},{name:"Make my bed",cue:"After I get up",identity:"someone who takes care of my space"},{name:"Move my body 30 min",cue:"After school",identity:"a strong, healthy athlete"},{name:"Say one kind thing to a brother",cue:"At dinner",identity:"a good big brother"}],
   rowan:[{name:"Read 15 minutes",cue:"After I brush my teeth at night",identity:"a reader"},{name:"Make my bed",cue:"After I get up",identity:"someone who takes care of my stuff"},{name:"Practice something hard for 10 min",cue:"After snack",identity:"someone who gets better every day"},{name:"Help with one chore",cue:"Before screen time",identity:"a helpful teammate"}],
@@ -235,6 +235,9 @@ const STARTER_MISSIONS={
   holden:[{title:"Learn to tie my shoes",type:"Learn",steps:["Make the bunny ears","Tie it with help","Tie it by myself 3 times"]},{title:"Say hi to a new kid at school",type:"Brave",steps:["Pick who","Say hi and ask their name","Tell Mom or Dad how it went"]}]
 };
 const COINS={goal:20,mission:25,goalset:5,journal:3,allhabits:5,brave:3,sprint:5,winXP:10};
+const INTERESTS=["Sports","Building & LEGO","Art","Music","Reading","Animals","Science","Cooking","Outdoors","Math","Writing","Video games"];
+const CALM_CHOICES=["A hug","Being alone for a bit","Moving my body","Talking it out","Music","Deep breaths","Cold water","Drawing"];
+const IDEAS={"Sports":["Make 10 free throws in a row","Run a mile without stopping"],"Building & LEGO":["Build something with no instructions and show the family","Design and build a marble run"],"Art":["Draw the same thing every day for a week and compare","Make a birthday card for someone, start to finish"],"Music":["Learn one song all the way through","Play a song for the family at dinner"],"Reading":["Read a book over 150 pages","Read to a brother 5 nights in a row"],"Animals":["Teach the dog a new trick","Be in charge of feeding the dogs for a week"],"Science":["Do an experiment and explain what happened","Grow something from a seed"],"Cooking":["Cook breakfast for the family","Learn 3 recipes by heart"],"Outdoors":["Hike a new trail with the family","Build a fort outside that lasts a week"],"Math":["Learn all the multiplication facts to 12","Teach a brother a math trick"],"Writing":["Write a 2-page story and read it aloud","Keep a journal for 7 days straight"],"Video games":["Beat a hard level with no help, then teach someone","Go 3 school days with zero game time and notice how you feel"]};
 const WIN_CATS=["Helped someone","Kind","Brave","Worked hard","Honest","Good teammate","Other"];
 const WIN_SPARKS=["Did you include someone who was left out?","Did you finish something hard without being asked?","Did you tell the truth when it was tough?","Did you help a brother, a teacher, or a neighbor?","Did you keep going after a mistake?","Did you share, hold a door, or say thank you first?"];
 const STARTER_CHORES={
@@ -355,9 +358,9 @@ const BADGES=[
   {id:"sprint5",name:"Focus Pilot",test:k=>k.sprints.length>=5,ico:"timer"},
   {id:"wins5",name:"5 Wins",test:k=>(k.wins||[]).filter(w=>w.status==="approved").length>=5,ico:"sparkle"},
   {id:"coins100",name:"100 Coins",test:k=>k.choreLog.filter(l=>l.status==="approved").reduce((a,l)=>a+l.pts,0)>=100,ico:"coin"},
-  {id:"goal",name:"Goal Getter",test:k=>(k.goals||[]).some(g=>g.done),ico:"target"},
-  {id:"mission",name:"Mission Complete",test:k=>k.missions.some(m=>m.done),ico:"flag"},
-  {id:"mission5",name:"5 Missions",test:k=>k.missions.filter(m=>m.done).length>=5,ico:"flag"},
+    {id:"mission",name:"First Goal",test:k=>(k.goals||[]).some(g=>g.done),ico:"flag"},
+  {id:"mission5",name:"5 Goals",test:k=>(k.goals||[]).filter(g=>g.done).length>=5,ico:"flag"},
+  {id:"checkin4",name:"4 Check-ins",test:k=>(k.goals||[]).reduce((a,g)=>a+(g.checkins||[]).length,0)>=4,ico:"target"},
   {id:"lvl5",name:"Commander",test:k=>levelOf(k.xp).n>=5,ico:"star"}
 ];
 function checkBadges(){const k=K();let got=false;BADGES.forEach(b=>{if(!k.badges.includes(b.id)&&b.test(k)){k.badges.push(b.id);got=true;setTimeout(()=>toast("New badge: "+b.name+"!"),1500)}});if(got)save()}
@@ -451,7 +454,7 @@ function renderPicker(){
   </div></main>`;
 }
 function renderToday(){
-  const k=K(),t=today(),ci=k.checkins[t]||{},kid=KIDS[S.active];
+  const k=K();migrateGoals(k);const t=today(),ci=k.checkins[t]||{},kid=KIDS[S.active];
   const doneToday=k.habits.filter(h=>h.done.includes(t)).length;
   const hour=new Date().getHours();const greet=hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
   const QPOOL=QUESTS.concat(((freshDeck()||{}).quests)||[]);const quest=k.quest[t]||(k.quest[t]=QPOOL[Math.floor(Math.random()*QPOOL.length)],save(),k.quest[t]);
@@ -468,8 +471,9 @@ function renderToday(){
     <h3 style="margin-top:6px">Feelings thermometer: where are you right now?</h3>
     <div class="thermo">${[1,2,3,4,5].map(n=>`<button class="deg" data-n="${n}" data-temp="${n}" aria-pressed="${temp===n}">${n}</button>`).join("")}</div>
     <div class="row between small muted"><span>1 = calm</span><span>3 = frustrated</span><span>5 = furious</span></div>
-    ${temp?`<div class="card soft stack"><b>${temp>=4?"Big feeling. That's OK. Let's move down one number:":temp===3?"Let's move down one number:":"Nice. Keep it there:"}</b><ul style="margin:0;padding-left:20px">${CALM_IDEAS[temp].map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}
+    ${temp?`<div class="card soft stack"><b>${temp>=4?"Big feeling. That's OK. Let's move down one number:":temp===3?"Let's move down one number:":"Nice. Keep it there:"}</b>${(k.profile&&k.profile.calm||[]).length&&temp>=3?`<p class="small"><b>Your go-to:</b> ${k.profile.calm.map(esc).join(" · ")}</p>`:""}<ul style="margin:0;padding-left:20px">${CALM_IDEAS[temp].map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}
   </section>
+  ${k.profile?"":`<section class="card stack" style="border-left:8px solid var(--mint)"><h2>Tell us about you</h2><p class="muted">8 quick questions. The app uses your answers to pick goal ideas, calm-down tricks and rewards that fit you. +${XP.aboutme} XP.</p><button class="btn primary" data-act="aboutme">Start</button></section>`}
   <section class="card stack">
     <div class="row between"><h2>Today's habits</h2><span class="pill mint num">${doneToday}/${k.habits.length}</span></div>
     ${k.habits.length?k.habits.map(h=>habitRow(h,t,true)).join(""):`<p class="muted">No habits yet. Add one in the Habits tab.</p>`}
@@ -480,13 +484,14 @@ function renderToday(){
     <p style="font-size:19px;font-family:var(--display)">${quest}</p>
     <div class="row">${k.quest[t+"_done"]?"":`<button class="btn accent" data-act="questdone">I did it (+${XP.step} XP)</button>`}<button class="btn ghost" data-act="questnew">Different one</button></div>
   </section>
-  ${(k.goals||[]).filter(g=>!g.done).length?`<section class="card stack"><div class="row between"><h2>Your goals</h2><button class="btn sm ghost" data-tab="goals">See all</button></div>${(k.goals||[]).filter(g=>!g.done).slice(0,2).map(g=>{const d=daysUntil(g.due);return `<div class="row between" style="gap:8px"><span style="min-width:0;flex:1"><b>${esc(g.specific)}</b><br><span class="small muted">First step: ${esc(g.step)}</span></span><span class="pill kid num">${g.progress||0}%${d!=null?" · "+d+"d":""}</span></div>`}).join("")}</section>`:`<section class="card stack"><h2>Set a goal</h2><p class="muted">What's one thing you want to be able to do by Thanksgiving? Build it step by step.</p><button class="btn primary" data-tab="goals">Build a SMART goal</button></section>`}
+  ${(k.goals||[]).filter(g=>!g.done).length?`<section class="card stack"><div class="row between"><h2>Your goals</h2><button class="btn sm ghost" data-tab="goals">See all</button></div>${(k.goals||[]).filter(g=>!g.done&&needsCheckin(g)).length?`<p class="pill sun" style="justify-self:start">Weekly check-in due</p>`:""}${(k.goals||[]).filter(g=>!g.done).slice(0,2).map(g=>{const d=daysUntil(g.due);return `<div class="row between" style="gap:8px"><span style="min-width:0;flex:1"><b>${esc(g.specific)}</b><br><span class="small muted">${nextStep(g)?"Next: "+esc(nextStep(g).t):"All steps done"}</span></span><span class="pill kid num">${goalPct(g)}%${d!=null?" · "+d+"d":""}</span></div>`}).join("")}</section>`:`<section class="card stack"><h2>Set a goal</h2><p class="muted">What's one thing you want to be able to do by Thanksgiving? Break it into steps.</p><button class="btn primary" data-tab="goals">Set a goal</button></section>`}
   <section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>Do something amazing today?</h2>${(k.wins||[]).some(w=>w.date===t)?`<span class="pill mint">Posted</span>`:""}</div><p class="muted">Helped someone, worked hard, told the truth, included somebody. Post it and Dad or Mom can award bonus coins.</p><button class="btn" data-tab="shine">Post a win</button></section>
   <section class="card stack">
     <h2>Tonight's Brave Book</h2>
     <p class="muted">${k.journal[t]?"You wrote today's entry. Nice.":"2 minutes before bed: what did you try, how did it feel, what did your Coach say?"}</p>
     <button class="btn primary" data-tab="brave">${k.journal[t]?"Read it":"Write it"}</button>
-  </section>`;
+  </section>
+  ${k.profile?`<p class="small muted" style="text-align:center">Things change. <button class="btn sm ghost" data-act="aboutme">Update my About Me</button></p>`:""}`;
 }
 function habitRow(h,t,compact){
   const done=h.done.includes(t),s=streak(h);
@@ -510,40 +515,48 @@ function renderHabits(){
 function daysUntil(d){if(!d)return null;const a=new Date(d+"T12:00:00"),b=new Date();b.setHours(12,0,0,0);return Math.round((a-b)/86400000)}
 function goalSentence(g){return `I will <b>${esc(g.specific)}</b>${g.due?` by <b>${fmtDate(g.due)}</b>`:""}. I'll know I did it when <b>${esc(g.measure)}</b>. My first step is <b>${esc(g.step)}</b>.${g.why?` This matters to me because <b>${esc(g.why)}</b>.`:""}`}
 function fmtDate(d){const x=new Date(d+"T12:00:00");return x.toLocaleDateString(undefined,{month:"short",day:"numeric"})}
+function weekStart(){const d=new Date();const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return dayKey(d)}
+function goalPct(g){const n=(g.steps||[]).length;return n?Math.round(g.steps.filter(x=>x.done).length/n*100):0}
+function nextStep(g){return (g.steps||[]).find(x=>!x.done)}
+function needsCheckin(g){if(g.done)return false;const w=weekStart();if((g.checkins||[]).some(c=>c.week===w))return false;return (g.created||"")<w||true}
+function migrateGoals(k){
+  let changed=false;k.goals=k.goals||[];
+  k.goals.forEach(g=>{if(!g.steps){g.title=g.title||g.specific||"Goal";g.steps=[g.step,g.measure].filter(Boolean).map(t=>({t,done:false}));g.checkins=[];changed=true}});
+  (k.missions||[]).forEach(m=>{k.goals.push({id:m.id,title:m.title,type:m.type,steps:m.steps.map(x=>({t:x.t,done:!!x.done})),done:!!m.done,doneAt:m.doneAt,created:today(),checkins:[],why:""});changed=true});
+  if((k.missions||[]).length){k.missions=[];changed=true}
+  if(changed)save();
+}
 function renderGoals(){
-  const k=K();k.goals=k.goals||[];
+  const k=K();migrateGoals(k);
   const open=k.goals.filter(g=>!g.done),done=k.goals.filter(g=>g.done);
-  const def=new Date();def.setDate(def.getDate()+14);
+  const due=open.filter(needsCheckin);
+  const f=freshDeck(),fm=freshMissions();
   return `
-  <h1>Goals</h1>
-  <p class="muted">A wish is "get better at basketball." A SMART goal is "make 10 free throws in a row by Nov 15." Smart goals get done. Build one below.</p>
-  ${open.map(g=>goalCard(g)).join("")}
+  <div class="row between"><h1>Goals</h1><button class="btn primary" data-act="addgoal">+ New goal</button></div>
+  <p class="muted">Big things get done one step at a time. Pick a goal, break it into steps, check them off, and check in every week.</p>
+  ${due.length?`<section class="card stack" style="border-left:8px solid var(--accent)"><h2>Weekly check-in</h2><p class="small muted">It's a new week. How's each goal going? ${XP.checkinGoal} XP per check-in.</p>${due.map(g=>`<button class="step" data-checkin="${g.id}"><span class="box"></span><span><b>${esc(g.title)}</b><br><span class="small muted">${goalPct(g)}% done${nextStep(g)?" · next: "+esc(nextStep(g).t):""}</span></span></button>`).join("")}</section>`:""}
+  ${renderTimer()}
+  ${open.map(g=>goalCard(g)).join("")||`<div class="card"><p class="muted">No goals yet. Tap "+ New goal" or grab one below.</p></div>`}
+  ${f&&fm.length?`<section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>New this week</h2><span class="pill">${esc(f.theme||"")}</span></div><p class="small muted">Fresh goal ideas, steps included. Tap one to take it on.</p>${fm.map((m,i)=>`<div class="reward"><div><b>${esc(m.title)}</b><div class="small muted">${esc(m.type)} · ${m.steps.length} steps</div></div><button class="btn sm primary" data-freshmission="${i}">Take it on</button></div>`).join("")}</section>`:""}
   <section class="card stack">
-    <h2>${open.length?"Build another SMART goal":"Build your first SMART goal"}</h2>
-    <form class="stack" data-form="smart" style="gap:18px">
-      <div class="smart"><div class="letter">S</div><div><h3>Specific: what exactly will you do?</h3><p class="small muted">Say it so clearly a stranger would know what you mean.</p><input class="t" id="g-specific" name="specific" required placeholder="read 5 chapter books" style="margin-top:8px"><div class="ex">Weak: "get better at reading." Strong: "read 5 chapter books."</div></div></div>
-      <div class="smart"><div class="letter">M</div><div><h3>Measurable: how will you know you did it?</h3><p class="small muted">Put a number in it. Numbers don't lie.</p><input class="t" id="g-measure" name="measure" required placeholder="I've finished all 5 books and can name them" style="margin-top:8px"><div class="ex">"I can make 10 free throws in a row" or "my jar has $20 in it."</div></div></div>
-      <div class="smart"><div class="letter">A</div><div><h3>Achievable: is it a stretch, but possible?</h3><p class="small muted">Too easy is boring. Too big is quitting. Pick just right, then name the first tiny step.</p><div class="chips" style="margin-top:8px">${["Too easy","Just right","Too big"].map(x=>`<button type="button" class="chip" data-fit="${x}" aria-pressed="${x==="Just right"}">${x}</button>`).join("")}</div><input type="hidden" name="fit" id="g-fit" value="Just right"><input class="t" id="g-step" name="step" required placeholder="pick my first book tonight" style="margin-top:8px"><div class="ex">The first step should take 2 minutes or less.</div></div></div>
-      <div class="smart"><div class="letter">R</div><div><h3>Relevant: why does this matter to YOU?</h3><p class="small muted">Not to Mom or Dad. To you. Goals you care about are the ones you finish.</p><input class="t" id="g-why" name="why" placeholder="I want to read the big books my friends read" style="margin-top:8px"></div></div>
-      <div class="smart"><div class="letter">T</div><div><h3>Time-bound: by when?</h3><p class="small muted">A goal without a date is a wish.</p><input class="t" type="date" id="g-due" name="due" required value="${dayKey(def)}" style="margin-top:8px"></div></div>
-      <button class="btn primary block" type="submit">Set this goal (+${XP.goalset} XP)</button>
-    </form>
+    <h2>Goal ideas</h2>
+    ${(k.profile&&(k.profile.interests||[]).length)?`<p class="small muted">Picked for you, from what you said you're into:</p><div class="chips">${k.profile.interests.flatMap(i=>IDEAS[i]||[]).slice(0,8).map(q=>`<button class="chip" data-ideagoal="${esc(q)}">${esc(q)}</button>`).join("")}</div>${k.profile.hard?`<p class="small muted">You said you want to get better at <b>${esc(k.profile.hard)}</b>. <button class="btn sm" data-ideagoal="Get better at ${esc(k.profile.hard)}">Make it a goal</button></p>`:""}`:""}
+    <p class="small muted">Real-world skills. Tap one and you'll fill in the steps.</p>
+    <div class="chips">${QUESTS.slice(0,8).map((q,i)=>`<button class="chip" data-questmission="${i}">${q.replace(/\.$/,"")}</button>`).join("")}</div>
   </section>
-  ${done.length?`<details class="card"><summary>${done.length} goal${done.length>1?"s":""} achieved</summary><div class="stack" style="margin-top:10px">${done.map(g=>`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>${esc(g.specific)}</span><span class="pill mint">Done ${g.doneAt?fmtDate(g.doneAt):""}</span></div>`).join("")}</div></details>`:""}
-  <section class="card stack"><h2>What SMART means</h2>
-    ${[["S","Specific","Say exactly what you'll do."],["M","Measurable","Put a number on it so you can check."],["A","Achievable","A stretch you can actually reach. Start with a tiny first step."],["R","Relevant","It matters to you, not just to grown-ups."],["T","Time-bound","Pick a date. Then work backward."]].map(([l,t,b])=>`<div class="tip"><div class="n">${l}</div><div><b>${t}</b><p class="small">${b}</p></div></div>`).join("")}
-  </section>`;
+  ${done.length?`<details class="card"><summary>${done.length} goal${done.length>1?"s":""} finished</summary><div class="stack" style="margin-top:10px">${done.map(g=>`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>${esc(g.title)}</span><span class="pill mint">Done ${g.doneAt?fmtDate(g.doneAt):""}</span></div>`).join("")}</div></details>`:""}`;
 }
 function goalCard(g){
-  const d=daysUntil(g.due);const p=g.progress||0;
+  const pct=goalPct(g),ns=nextStep(g),d=daysUntil(g.due);const cis=(g.checkins||[]).slice().reverse();
   const dueTxt=d==null?"":d<0?`<span class="pill" style="color:var(--danger)">${-d} day${-d===1?"":"s"} past due</span>`:d===0?`<span class="pill sun">Due today</span>`:`<span class="pill kid num">${d} day${d===1?"":"s"} left</span>`;
   return `<div class="goalcard">
-    <div class="row between"><span class="pill">${esc(g.fit||"Just right")}</span>${dueTxt}</div>
-    <p class="goalsentence">${goalSentence(g)}</p>
-    <div class="xpbar"><i style="width:${p}%"></i></div>
-    <div class="small muted">How far along are you?</div>
-    <div class="prog">${[0,25,50,75,100].map(n=>`<button data-goalprogress="${g.id}:${n}" aria-pressed="${p===n}">${n}%</button>`).join("")}</div>
-    <div class="row">${p===100?`<button class="btn accent" data-goaldone="${g.id}">I did it! (+${XP.goal} XP)</button>`:""}<button class="btn sm ghost" data-goallaunch="${g.id}">Turn into a mission</button><button class="btn sm ghost" data-delgoal="${g.id}">Remove</button></div>
+    <div class="row between"><h3>${esc(g.title)}</h3>${dueTxt}</div>
+    ${g.why?`<p class="small muted">Why: ${esc(g.why)}</p>`:""}
+    <div class="xpbar"><i style="width:${pct}%"></i></div>
+    <div class="row between small muted num"><span>${g.steps.filter(x=>x.done).length} of ${g.steps.length} steps · ${pct}%</span>${ns?`<span><b>Next:</b> ${esc(ns.t)}</span>`:`<span class="pill mint">All steps done!</span>`}</div>
+    <div class="steps">${g.steps.map((st,i)=>`<button class="step ${st.done?"done":""}" data-gstep="${g.id}:${i}"><span class="box">${st.done?I.check:""}</span><span>${esc(st.t)}${st.doneAt?` <span class="small muted">· ${fmtDate(st.doneAt)}</span>`:""}</span></button>`).join("")}</div>
+    <div class="row"><button class="btn sm ghost" data-addstep="${g.id}">+ Add a step</button><button class="btn sm ghost" data-focus="${g.id}">Focus sprint on this</button>${needsCheckin(g)?`<button class="btn sm" data-checkin="${g.id}">Weekly check-in</button>`:""}${pct===100?`<button class="btn sm accent" data-goaldone="${g.id}">I did it! (+${XP.goal} XP)</button>`:""}<button class="btn sm ghost" data-delgoal="${g.id}">Remove</button></div>
+    ${cis.length?`<details><summary class="small">${cis.length} check-in${cis.length>1?"s":""}</summary><div class="stack" style="margin-top:8px">${cis.map(c=>`<div class="small" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="muted num">${fmtDate(c.week)}</span> · <b>${esc(c.rating)}</b> · ${c.pct}%${c.note?` · ${esc(c.note)}`:""}${c.next?` · <i>Next: ${esc(c.next)}</i>`:""}</div>`).join("")}</div></details>`:""}
   </div>`;
 }
 function choreRow(c,k,t,compact){
@@ -581,11 +594,8 @@ function renderChores(){
   </section>`;
 }
 function freshDeck(){const F=window.FRESH||[];return F.length?F[0]:null}
-function freshMissions(){const f=freshDeck();if(!f)return [];const k=K();return (f.missions||[]).filter(m=>m.for==="all"||m.for===S.active).filter(m=>!k.missions.some(x=>x.title===m.title))}
-function renderGoalsTab(){
-  const seg=`<div class="row" style="gap:8px"><button class="chip" data-gview="smart" aria-pressed="${goalsView==="smart"}" style="min-height:48px;font-size:16px">SMART goals</button><button class="chip" data-gview="missions" aria-pressed="${goalsView==="missions"}" style="min-height:48px;font-size:16px">Missions &amp; focus</button></div>`;
-  return seg+(goalsView==="smart"?renderGoals():renderMissions());
-}
+function freshMissions(){const f=freshDeck();if(!f)return [];const k=K();return (f.missions||[]).filter(m=>m.for==="all"||m.for===S.active).filter(m=>!(k.goals||[]).some(x=>x.title===m.title))}
+function renderGoalsTab(){return renderGoals()}
 function renderShine(){
   const k=K();k.wins=k.wins||[];const t=today();
   const wins=[...k.wins].reverse();const earned=k.wins.filter(w=>w.status==="approved").reduce((a,w)=>a+(w.coins||0),0);
@@ -613,32 +623,6 @@ function renderShine(){
   <section class="card stack"><h2>Ideas that count</h2>
     ${[["Helping","Carry groceries, help a brother with homework, hold a door, clean up a mess you didn't make."],["Kindness","Include someone, give a real compliment, write a thank-you note, share without being asked."],["Brave","Raise your hand, try out for something, admit a mistake, stand up for someone."],["Hard work","Finish the hard part first, redo something until it's right, practice when nobody's watching."]].map(([t,b])=>`<div class="tip"><div class="n" style="font-size:14px">${t[0]}</div><div><b>${t}</b><p class="small">${b}</p></div></div>`).join("")}
   </section>`;
-}
-function renderMissions(){
-  const k=K();
-  const open=k.missions.filter(m=>!m.done),done=k.missions.filter(m=>m.done);
-  return `
-  <div class="row between"><h1>Missions</h1><button class="btn primary" data-act="addmission">+ New mission</button></div>
-  <p class="muted">A mission is a goal broken into levels. Master one level before you move to the next.</p>
-  ${renderTimer()}
-  ${(()=>{const f=freshDeck(),fm=freshMissions();if(!f||!fm.length)return "";return `<section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>New this week</h2><span class="pill">${esc(f.theme||"")}</span></div><p class="small muted">Fresh missions just dropped. Tap one to launch it.</p>${fm.map((m,i)=>`<div class="reward"><div><b>${esc(m.title)}</b><div class="small muted">${esc(m.type)} · ${m.steps.length} levels</div></div><button class="btn sm primary" data-freshmission="${i}">Launch</button></div>`).join("")}</section>`})()}
-  ${open.map(m=>missionCard(m)).join("")}
-  ${done.length?`<details class="card"><summary>${done.length} completed mission${done.length>1?"s":""}</summary><div class="stack" style="margin-top:10px">${done.map(m=>`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>${esc(m.title)}</span><span class="pill mint">Done</span></div>`).join("")}</div></details>`:""}
-  <section class="card stack">
-    <h2>Life-skill quest ideas</h2>
-    <p class="small muted">Real-world skills, like the afternoon workshops at Alpha School. Tap one to make it a mission.</p>
-    <div class="chips">${QUESTS.slice(0,8).map((q,i)=>`<button class="chip" data-questmission="${i}">${q.replace(/\.$/,"")}</button>`).join("")}</div>
-  </section>`;
-}
-function missionCard(m){
-  const n=m.steps.filter(s=>s.done).length,pct=Math.round(n/m.steps.length*100);
-  return `<div class="mission">
-    <div class="row between"><h3>${esc(m.title)}</h3><span class="pill kid">${esc(m.type)}</span></div>
-    <div class="xpbar"><i style="width:${pct}%"></i></div>
-    <div class="small muted num">Level ${n} of ${m.steps.length}</div>
-    <div class="steps">${m.steps.map((s,i)=>`<button class="step ${s.done?"done":""}" data-step="${m.id}:${i}"><span class="box">${s.done?I.check:""}</span><span>${esc(s.t)}</span></button>`).join("")}</div>
-    <div class="row"><button class="btn sm ghost" data-focus="${m.id}">Focus sprint on this</button>${n===m.steps.length?`<button class="btn sm accent" data-complete="${m.id}">Complete mission (+${XP.mission} XP)</button>`:""}<button class="btn sm ghost" data-delmission="${m.id}">Remove</button></div>
-  </div>`;
 }
 function renderTimer(){
   const ts=timerState;
@@ -710,7 +694,7 @@ function renderParent(){
   ${Object.entries(KIDS).map(([id,kid])=>{const k=ensureKid(id);const lv=levelOf(k.xp);const t=today();const last7=[0,1,2,3,4,5,6].map(i=>daysAgo(i));
     return `<details class="card" ${id===S.active?"open":""}><summary><span class="avatar" style="--kid:${kid.color};width:34px;height:34px;font-size:16px">${kid.name[0]}</span>${kid.name} · Level ${lv.n} ${lv.name} · ${k.xp} XP</summary>
     <div class="stack" style="margin-top:12px">
-      <div class="row"><span class="pill">${checkinStreak(k)}-day check-in streak</span><span class="pill">${Object.keys(k.journal).length} journal entries</span><span class="pill">${k.sprints.length} focus sprints</span><span class="pill">${k.missions.filter(m=>m.done).length} missions done</span></div>
+      <div class="row"><span class="pill">${checkinStreak(k)}-day check-in streak</span><span class="pill">${Object.keys(k.journal).length} journal entries</span><span class="pill">${k.sprints.length} focus sprints</span><span class="pill">${(k.goals||[]).filter(g=>g.done).length} goals done</span></div>
       <h3>Last 7 days</h3>
       <div class="tablewrap"><table><thead><tr><th>Day</th><th>Weather</th><th>Temp</th><th>Habits</th><th>Journal</th></tr></thead><tbody>${last7.map(d=>{const c=k.checkins[d]||{};const j=k.journal[d];const hd=k.habits.filter(h=>h.done.includes(d)).length;return `<tr><td class="num">${d.slice(5).replace("-","/")}</td><td>${c.weather?WX[c.weather].l:"—"}</td><td class="num">${c.temp||"—"}</td><td class="num">${hd}/${k.habits.length}</td><td>${j?esc(j.tried)+(j.coach?" · <i>"+esc(j.coach)+"</i>":""):"—"}</td></tr>`}).join("")}</tbody></table></div>
       <label class="f">Parent echo for this week ("This week, I saw you...")<textarea class="t" id="echo-${id}" data-echo="${id}" placeholder="This week, I saw you keep going on your math even when you were frustrated.">${esc(k.echoes[weekKey()]||"")}</textarea></label>
@@ -719,12 +703,11 @@ function renderParent(){
       <div class="stack">${k.habits.map(h=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(h.name)} <span class="small muted">· ${streak(h)} day chain</span></span><button class="btn sm ghost" data-pdelhabit="${id}:${h.id}">Remove</button></div>`).join("")||"<p class='muted small'>None</p>"}</div>
       <div class="row between"><h3>Chores</h3><span class="row" style="gap:6px"><span class="coinpill">${I.coin}${k.coins||0}</span><button class="btn sm ghost" data-coinadj="${id}:10">+10</button><button class="btn sm ghost" data-coinadj="${id}:-10">−10</button><button class="btn sm primary" data-addchore="${id}">+ Chore</button></span></div>
       <div class="stack">${k.chores.map(c=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(c.name)} <span class="small muted">· ${c.freq==="daily"?"daily":c.freq==="weekly"?DAYN[c.day]+"s":"once"} · ${c.pts} coins</span></span><button class="btn sm ghost" data-pdelchore="${id}:${c.id}">Remove</button></div>`).join("")||"<p class='muted small'>None</p>"}</div>
+      ${k.profile?`<details><summary>About ${kid.name} (their answers)</summary><div class="stack small" style="margin-top:8px"><div><b>Into:</b> ${(k.profile.interests||[]).map(esc).join(", ")||"—"}</div><div><b>Good at:</b> ${esc(k.profile.good)||"—"}</div><div><b>Wants to get better at:</b> ${esc(k.profile.hard)||"—"}</div><div><b>Calms down with:</b> ${(k.profile.calm||[]).map(esc).join(", ")||"—"}</div><div><b>Would work hard for:</b> ${esc(k.profile.reward)||"—"} ${k.profile.reward?`<button class="btn sm ghost" data-rewardfrom="${esc(k.profile.reward)}">Add to shop</button>`:""}</div><div><b>Looks up to:</b> ${esc(k.profile.hero)||"—"}</div><div><b>${esc(k.profile.chrono)||"—"}</b></div><div><b>Time with you:</b> ${esc(k.profile.together)||"—"}</div><div><b>Wants to be:</b> ${esc(k.profile.grow)||"—"}</div><div class="muted">Updated ${k.profile.updated||""}</div></div></details>`:`<p class="small muted">${kid.name} hasn't filled out About Me yet.</p>`}
       <h3>Wins</h3>
       <div class="stack">${(k.wins||[]).slice(-5).reverse().map(w=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="small muted num">${w.date.slice(5).replace("-","/")}</span> <b>${esc(w.cat)}</b> · ${esc(w.text)} ${w.status==="approved"?`<span class="coinpill">${I.coin}+${w.coins||0}</span>`:`<span class="pill">pending</span>`}</div>`).join("")||`<p class="muted small">None yet</p>`}</div>
-      <h3>SMART goals</h3>
-      <div class="stack">${(k.goals||[]).map(g=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(g.specific)} <span class="small muted">· ${g.progress||0}%${g.due?" · due "+fmtDate(g.due):""}${g.done?" · done":""}</span></span></div>`).join("")||"<p class='muted small'>None</p>"}</div>
-      <h3>Missions</h3>
-      <div class="stack">${k.missions.map(m=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(m.title)} <span class="small muted">· ${m.steps.filter(s=>s.done).length}/${m.steps.length}${m.done?" · done":""}</span></span><button class="btn sm ghost" data-pdelmission="${id}:${m.id}">Remove</button></div>`).join("")||"<p class='muted small'>None</p>"}</div>
+      <h3>Goals</h3>
+      <div class="stack">${(k.goals||[]).map(g=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(g.title||g.specific)} <span class="small muted">· ${goalPct(g)}%${g.due?" · due "+fmtDate(g.due):""}${g.done?" · done":""}${(g.checkins||[]).length?" · last check-in: "+esc(g.checkins[g.checkins.length-1].rating):""}</span></span>${nextStep(g)&&!g.done?`<div class="small muted">Next: ${esc(nextStep(g).t)}</div>`:""}</div>`).join("")||"<p class='muted small'>None</p>"}</div>
     </div></details>`}).join("")}
   <section class="card stack">
     <div class="row between"><h2>Rewards shop (all three boys)</h2><button class="btn sm primary" data-act="addreward">+ Reward</button></div>
@@ -768,14 +751,51 @@ function renderModal(){
         <div class="row"><button class="btn primary" type="submit">Save</button>${h.id?`<button class="btn ghost" type="button" data-delhabit="${h.id}">Delete</button>`:""}</div>
       </form></div></div>`;
   }
-  if(m.type==="mission"){
+  if(m.type==="aboutme"){
+    const pr=K().profile||{};const chip=(list,name,sel,multi)=>`<div class="chips">${list.map(x=>`<button type="button" class="chip" data-${multi?"multi":"single"}="${name}" data-val="${esc(x)}" aria-pressed="${(multi?(sel||[]).includes(x):sel===x)}">${esc(x)}</button>`).join("")}</div><input type="hidden" id="${name}" name="${name.replace("am-","")}" value="${esc(multi?(sel||[]).join("|"):(sel||""))}">`;
     return `<div class="modal" data-close><div class="card">
-      <div class="row between"><h2>New mission</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
-      <form class="stack" data-form="mission" style="margin-top:12px">
-        <label class="f">What do you want to do?<input class="t" id="m-title" name="title" required value="${esc(m.title||"")}" placeholder="Learn to do a kickflip"></label>
-        <label class="f">Type<div class="chips">${["Learn","Build","Body","Brave","Money","Life skill","Kindness"].map(t=>`<button type="button" class="chip" data-mtype="${t}" aria-pressed="${(m.mtype||"Learn")===t}">${t}</button>`).join("")}</div></label>
-        <label class="f">Levels (one per line, easiest first)<textarea class="t" id="m-steps" name="steps" rows="4" placeholder="Level 1: ...&#10;Level 2: ...&#10;Level 3: ...">${esc(m.steps||"")}</textarea></label>
-        <button class="btn primary" type="submit">Launch mission</button>
+      <div class="row between"><h2>About me</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
+      <p class="small muted">No wrong answers. You can change these any time.</p>
+      <form class="stack" data-form="aboutme" style="margin-top:12px;gap:16px">
+        <label class="f">1. What are you into right now? (pick all that fit)${chip(INTERESTS,"am-interests",pr.interests,true)}</label>
+        <label class="f">2. What's something you're really good at?<input class="t" id="am-good" name="good" value="${esc(pr.good)}" placeholder="Soccer, making people laugh, LEGO..."></label>
+        <label class="f">3. What's something hard you want to get better at?<input class="t" id="am-hard" name="hard" value="${esc(pr.hard)}" placeholder="Reading faster, free throws, not getting mad..."></label>
+        <label class="f">4. When you have a big feeling, what helps you calm down?${chip(CALM_CHOICES,"am-calm",pr.calm,true)}</label>
+        <label class="f">5. What's a reward you'd work really hard for?<input class="t" id="am-reward" name="reward" value="${esc(pr.reward)}" placeholder="A trip to the trampoline park"></label>
+        <label class="f">6. Who do you look up to, and why?<input class="t" id="am-hero" name="hero" value="${esc(pr.hero)}" placeholder="Grandpa, because he can fix anything"></label>
+        <label class="f">7. Morning person or night owl?${chip(["Morning person","Night owl","Both","Neither!"],"am-chrono",pr.chrono,false)}</label>
+        <label class="f">8. Favorite way to spend time with Dad or Mom?<input class="t" id="am-together" name="together" value="${esc(pr.together)}" placeholder="Fishing, cooking, bike rides..."></label>
+        <label class="f">Bonus: what do you want to be when you grow up? (this week's answer)<input class="t" id="am-grow" name="grow" value="${esc(pr.grow)}" placeholder="Pro skater / engineer / vet"></label>
+        <button class="btn primary block" type="submit">Save (+${XP.aboutme} XP)</button>
+      </form></div></div>`;
+  }
+  if(m.type==="goal"){
+    const def=new Date();def.setDate(def.getDate()+21);
+    return `<div class="modal" data-close><div class="card">
+      <div class="row between"><h2>New goal</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
+      <form class="stack" data-form="goal" style="margin-top:12px">
+        <label class="f">What do you want to be able to do?<input class="t" id="g-title" name="title" required value="${esc(m.title||"")}" placeholder="Do a kickflip"></label>
+        <label class="f">What are the steps to get there? (one per line, first step first)<textarea class="t" id="g-steps" name="steps" rows="5" required placeholder="Learn to ollie&#10;Practice the flick 10 min a day for a week&#10;Land it once with a hand on the fence&#10;Land it 3 times in a row">${esc(m.steps||"")}</textarea><span class="small muted" style="text-transform:none;letter-spacing:0;font-weight:600">Tip: the first step should be something you can do today.</span></label>
+        <label class="f">By when?<input class="t" type="date" id="g-due" name="due" value="${dayKey(def)}"></label>
+        <label class="f">Why do you want this? (optional)<input class="t" id="g-why" name="why" placeholder="So I can skate with my friends"></label>
+        <button class="btn primary block" type="submit">Set goal (+${XP.goalset} XP)</button>
+      </form></div></div>`;
+  }
+  if(m.type==="addstep"){
+    return `<div class="modal" data-close><div class="card">
+      <div class="row between"><h2>Add a step</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
+      <form class="stack" data-form="addstep" style="margin-top:12px"><input class="t" id="as-text" name="text" required placeholder="What's the next thing to do?"><button class="btn primary" type="submit">Add</button></form></div></div>`;
+  }
+  if(m.type==="checkin"){
+    const g=K().goals.find(x=>x.id===m.gid);const ns=g?nextStep(g):null;
+    return `<div class="modal" data-close><div class="card">
+      <div class="row between"><h2>Weekly check-in</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
+      <p><b>${esc(g?g.title:"")}</b> · ${g?goalPct(g):0}% done</p>
+      <form class="stack" data-form="checkin" style="margin-top:12px">
+        <label class="f">How did this week go?<div class="chips">${["Crushed it","Made progress","Got stuck","Didn't start"].map((r,i)=>`<button type="button" class="chip" data-rating="${r}" aria-pressed="${i===1}">${r}</button>`).join("")}</div><input type="hidden" id="ci-rating" name="rating" value="Made progress"></label>
+        <label class="f">What happened? (one line)<input class="t" id="ci-note" name="note" placeholder="Practiced 4 days. Landed it once!"></label>
+        <label class="f">What's the one step for next week?<input class="t" id="ci-next" name="next" value="${esc(ns?ns.t:"")}" placeholder="Land it twice in a row"></label>
+        <button class="btn primary block" type="submit">Save check-in (+${XP.checkinGoal} XP)</button>
       </form></div></div>`;
   }
   if(m.type==="chore"){
@@ -793,7 +813,7 @@ function renderModal(){
     return `<div class="modal" data-close><div class="card">
       <div class="row between"><h2>New reward</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
       <form class="stack" data-form="reward" style="margin-top:12px">
-        <label class="f">Reward<input class="t" id="r-name" name="name" required placeholder="Trip to the trampoline park"></label>
+        <label class="f">Reward<input class="t" id="r-name" name="name" required value="${esc(m.name||"")}" placeholder="Trip to the trampoline park"></label>
         <label class="f">Cost in coins<input class="t" id="r-cost" name="cost" type="number" min="1" max="5000" value="50" required></label>
         <button class="btn primary" type="submit">Add reward</button>
       </form></div></div>`;
@@ -818,17 +838,18 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 function openPin(mode){pinMode=mode;pinBuf="";modal={type:"pin"};render()}
 function bind(){
   app.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{S.active=b.dataset.pick;ensureKid(S.active);save();tab="today";render()});
-  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==="missions"){tab="goals";goalsView="missions"}coachRound=null;render();document.querySelector(".main").scrollTop=0});
+  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==="missions")tab="goals";coachRound=null;render();document.querySelector(".main").scrollTop=0});
   app.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>act(b.dataset.act,b,e));
   app.querySelectorAll("[data-wx]").forEach(b=>b.onclick=()=>{const k=K(),t=today(),c=k.checkins[t]||{};const first=!c.weather;c.weather=b.dataset.wx;k.checkins[t]=c;save();if(first)addXP(XP.checkin,"weather logged");render()});
   app.querySelectorAll("[data-temp]").forEach(b=>b.onclick=()=>{const k=K(),t=today(),c=k.checkins[t]||{};c.temp=+b.dataset.temp;c.high=Math.max(c.high||0,c.temp);k.checkins[t]=c;save();render()});
   app.querySelectorAll("[data-habit]").forEach(b=>b.onclick=()=>{const k=K(),h=k.habits.find(x=>x.id===b.dataset.habit),t=today();if(h.done.includes(t)){h.done=h.done.filter(d=>d!==t);k.xp=Math.max(0,k.xp-XP.habit);save()}else{h.done.push(t);save();addXP(XP.habit,streak(h)>1?streak(h)+" day chain!":"habit done");if(k.habits.every(x=>x.done.includes(t)))setTimeout(()=>addCoins(COINS.allhabits,"every habit done today"),1200)}render()});
   app.querySelectorAll("[data-edithabit]").forEach(b=>b.onclick=()=>{modal={type:"habit",habit:K().habits.find(x=>x.id===b.dataset.edithabit)};render()});
   app.querySelectorAll("[data-delhabit]").forEach(b=>b.onclick=()=>{const k=K();k.habits=k.habits.filter(x=>x.id!==b.dataset.delhabit);save();modal=null;render()});
-  app.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>{const [mid,i]=b.dataset.step.split(":");const m=K().missions.find(x=>x.id===mid);const s=m.steps[+i];s.done=!s.done;save();if(s.done)addXP(XP.step,"level "+(+i+1)+" mastered");render()});
-  app.querySelectorAll("[data-complete]").forEach(b=>b.onclick=()=>{const m=K().missions.find(x=>x.id===b.dataset.complete);m.done=true;m.doneAt=today();save();addXP(XP.mission,"MISSION COMPLETE");setTimeout(()=>addCoins(COINS.mission,"mission bonus"),1200);render()});
-  app.querySelectorAll("[data-delmission]").forEach(b=>b.onclick=()=>{if(b.dataset.confirm){const k=K();k.missions=k.missions.filter(x=>x.id!==b.dataset.delmission);save();render()}else{b.dataset.confirm="1";b.textContent="Tap again to remove"}});
-  app.querySelectorAll("[data-questmission]").forEach(b=>b.onclick=()=>{modal={type:"mission",title:QUESTS[+b.dataset.questmission].replace(/\.$/,""),mtype:"Life skill",steps:"Level 1: Make a plan\nLevel 2: Do it once\nLevel 3: Do it again, better"};render()});
+  app.querySelectorAll("[data-gstep]").forEach(b=>b.onclick=()=>{const [gid,i]=b.dataset.gstep.split(":");const g=K().goals.find(x=>x.id===gid);const st=g.steps[+i];st.done=!st.done;st.doneAt=st.done?today():null;save();if(st.done)addXP(XP.goalstep,"step done");render()});
+  app.querySelectorAll("[data-addstep]").forEach(b=>b.onclick=()=>{modal={type:"addstep",gid:b.dataset.addstep};render()});
+  app.querySelectorAll("[data-checkin]").forEach(b=>b.onclick=()=>{modal={type:"checkin",gid:b.dataset.checkin};render()});
+  app.querySelectorAll("[data-ideagoal]").forEach(b=>b.onclick=()=>{modal={type:"goal",title:b.dataset.ideagoal,steps:""};render()});
+  app.querySelectorAll("[data-questmission]").forEach(b=>b.onclick=()=>{modal={type:"goal",title:QUESTS[+b.dataset.questmission].replace(/\.$/,""),steps:"Make a plan\nDo it once\nDo it again, better"};render()});
   app.querySelectorAll("[data-chore]").forEach(b=>b.onclick=()=>{const k=K(),t=today(),c=k.chores.find(x=>x.id===b.dataset.chore);const e=choreEntry(k,c.id,t);if(e){if(e.status==="pending"){k.choreLog=k.choreLog.filter(x=>x!==e);save();render()}return}const entry={id:uid(),chore:c.id,name:c.name,pts:c.pts,date:t,status:S.approve?"pending":"approved"};k.choreLog.push(entry);save();if(S.approve)toast("Nice. A parent will check it.");else addCoins(c.pts,c.name);render()});
   app.querySelectorAll("[data-redeem]").forEach(b=>b.onclick=()=>{const k=K(),r=S.rewards.find(x=>x.id===b.dataset.redeem);if((k.coins||0)<r.cost)return;if(!b.dataset.confirm){b.dataset.confirm="1";b.textContent="Spend "+r.cost+"?";return}k.coins-=r.cost;k.redemptions.push({id:uid(),reward:r.id,name:r.name,cost:r.cost,date:today(),status:"pending"});save();toast("Asked for: "+r.name);render()});
   app.querySelectorAll("[data-approve]").forEach(b=>b.onclick=()=>{const [kid,lid,verdict]=b.dataset.approve.split(":");const k=ensureKid(kid);const e=k.choreLog.find(x=>x.id===lid);if(!e)return;if(verdict==="ok"){e.status="approved";addCoins(e.pts,e.name,kid)}else{e.status="rejected"}save();render()});
@@ -836,29 +857,27 @@ function bind(){
   app.querySelectorAll("[data-coinadj]").forEach(b=>b.onclick=()=>{const [kid,n]=b.dataset.coinadj.split(":");addCoins(+n,"parent adjustment",kid);render()});
   app.querySelectorAll("[data-pdelchore]").forEach(b=>b.onclick=()=>{const [kid,cid]=b.dataset.pdelchore.split(":");const k=ensureKid(kid);k.chores=k.chores.filter(c=>c.id!==cid);save();render()});
   app.querySelectorAll("[data-addchore]").forEach(b=>b.onclick=()=>{modal={type:"chore",kid:b.dataset.addchore};render()});
+  app.querySelectorAll("[data-rewardfrom]").forEach(b=>b.onclick=()=>{modal={type:"reward",name:b.dataset.rewardfrom};render()});
   app.querySelectorAll("[data-delreward]").forEach(b=>b.onclick=()=>{S.rewards=S.rewards.filter(r=>r.id!==b.dataset.delreward);save();render()});
   app.querySelectorAll("[data-cfreq]").forEach(b=>b.onclick=()=>{app.querySelectorAll("[data-cfreq]").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");document.getElementById("c-freq").value=b.dataset.cfreq;document.getElementById("c-dayrow").hidden=b.dataset.cfreq!=="weekly"});
   app.querySelectorAll("[data-wcat]").forEach(b=>b.onclick=()=>{app.querySelectorAll("[data-wcat]").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");document.getElementById("w-cat").value=b.dataset.wcat});
   app.querySelectorAll("[data-winaward]").forEach(b=>b.onclick=()=>{const [kid,wid,n]=b.dataset.winaward.split(":");const k=ensureKid(kid);const w=k.wins.find(x=>x.id===wid);if(!w)return;w.status="approved";w.coins=+n;const note=document.getElementById("wn-"+wid);if(note&&note.value.trim())w.note=note.value.trim();if(+n>0)addCoins(+n,"win bonus",kid);save();render()});
-  app.querySelectorAll("[data-gview]").forEach(b=>b.onclick=()=>{goalsView=b.dataset.gview;render()});
-  app.querySelectorAll("[data-fit]").forEach(b=>b.onclick=()=>{app.querySelectorAll("[data-fit]").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");document.getElementById("g-fit").value=b.dataset.fit});
-  app.querySelectorAll("[data-goalprogress]").forEach(b=>b.onclick=()=>{const [id,n]=b.dataset.goalprogress.split(":");const g=K().goals.find(x=>x.id===id);const was=g.progress||0;g.progress=+n;save();if(+n>was)toast(+n===100?"Almost there. Tap 'I did it!'":"Progress saved");render()});
-  app.querySelectorAll("[data-goaldone]").forEach(b=>b.onclick=()=>{const g=K().goals.find(x=>x.id===b.dataset.goaldone);g.done=true;g.doneAt=today();save();addXP(XP.goal,"GOAL ACHIEVED");setTimeout(()=>addCoins(COINS.goal,"goal bonus"),1200);render()});
+  app.querySelectorAll("[data-goaldone]").forEach(b=>b.onclick=()=>{const g=K().goals.find(x=>x.id===b.dataset.goaldone);g.done=true;g.doneAt=today();save();addXP(XP.goal,"GOAL DONE");setTimeout(()=>addCoins(COINS.goal,"goal bonus"),1200);render()});
   app.querySelectorAll("[data-delgoal]").forEach(b=>b.onclick=()=>{if(b.dataset.confirm){const k=K();k.goals=k.goals.filter(x=>x.id!==b.dataset.delgoal);save();render()}else{b.dataset.confirm="1";b.textContent="Tap again to remove"}});
-  app.querySelectorAll("[data-goallaunch]").forEach(b=>b.onclick=()=>{const g=K().goals.find(x=>x.id===b.dataset.goallaunch);modal={type:"mission",title:g.specific,mtype:"Learn",steps:"Level 1: "+g.step+"\nLevel 2: Halfway: "+g.measure.replace(/^I\s/i,"")+" (half)\nLevel 3: "+g.measure};render()});
-  app.querySelectorAll("[data-freshmission]").forEach(b=>b.onclick=()=>{const m=freshMissions()[+b.dataset.freshmission];if(!m)return;K().missions.unshift({id:uid(),title:m.title,type:m.type,steps:m.steps.map(t=>({t,done:false})),done:false,fresh:true});save();toast("Mission launched");render()});
+  app.querySelectorAll("[data-freshmission]").forEach(b=>b.onclick=()=>{const m=freshMissions()[+b.dataset.freshmission];if(!m)return;const k=K();k.goals=k.goals||[];k.goals.unshift({id:uid(),title:m.title,type:m.type,steps:m.steps.map(t=>({t,done:false})),done:false,created:today(),checkins:[],why:""});save();addXP(XP.goalset,"new goal");render()});
   app.querySelectorAll("[data-sprint]").forEach(b=>b.onclick=()=>startTimer(+b.dataset.sprint,null));
-  app.querySelectorAll("[data-focus]").forEach(b=>b.onclick=()=>{const m=K().missions.find(x=>x.id===b.dataset.focus);startTimer(15,m.title)});
+  app.querySelectorAll("[data-focus]").forEach(b=>b.onclick=()=>{const g=K().goals.find(x=>x.id===b.dataset.focus);startTimer(15,g?g.title:null)});
   app.querySelectorAll("[data-feel]").forEach(b=>b.onclick=()=>{const inp=document.getElementById("j-felt");const cur=inp.value.split(",").map(s=>s.trim()).filter(Boolean);const f=b.dataset.feel;const i=cur.indexOf(f);if(i>=0)cur.splice(i,1);else cur.push(f);inp.value=cur.join(", ");b.setAttribute("aria-pressed",String(i<0))});
   app.querySelectorAll("[data-coach]").forEach(b=>b.onclick=()=>{if(coachRound.picked!=null)return;coachRound.picked=+b.dataset.coach;const k=K();k.coach=k.coach||[];k.coach.push({d:today(),i:coachRound.i,o:coachRound.picked});save();addXP(XP.coach,"Coach voice");render()});
   app.querySelectorAll("[data-game]").forEach(b=>b.onclick=()=>game(b.dataset.game));
   app.querySelectorAll("[data-pin]").forEach(b=>b.onclick=()=>pinPress(b.dataset.pin));
-  app.querySelectorAll("[data-mtype]").forEach(b=>b.onclick=()=>{app.querySelectorAll("[data-mtype]").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");modal.mtype=b.dataset.mtype});
+  app.querySelectorAll("[data-multi]").forEach(b=>b.onclick=()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",String(on));const hid=document.getElementById(b.dataset.multi);const cur=hid.value?hid.value.split("|"):[];const v=b.dataset.val;const i=cur.indexOf(v);if(on&&i<0)cur.push(v);if(!on&&i>=0)cur.splice(i,1);hid.value=cur.join("|")});
+  app.querySelectorAll("[data-single]").forEach(b=>b.onclick=()=>{app.querySelectorAll(`[data-single="${b.dataset.single}"]`).forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");document.getElementById(b.dataset.single).value=b.dataset.val});
+  app.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{app.querySelectorAll("[data-rating]").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");document.getElementById("ci-rating").value=b.dataset.rating});
   app.querySelectorAll("[data-saveecho]").forEach(b=>b.onclick=()=>{const id=b.dataset.saveecho;const v=document.getElementById("echo-"+id).value.trim();ensureKid(id).echoes[weekKey()]=v;save();toast("Saved for "+KIDS[id].name)});
   app.querySelectorAll("[data-bonus]").forEach(b=>b.onclick=()=>{ensureKid(b.dataset.bonus).xp+=25;save();toast("+25 XP for "+KIDS[b.dataset.bonus].name);render()});
   app.querySelectorAll("[data-copysummary]").forEach(b=>b.onclick=()=>copyText(summary(b.dataset.copysummary),"Summary copied"));
   app.querySelectorAll("[data-pdelhabit]").forEach(b=>b.onclick=()=>{const [kid,hid]=b.dataset.pdelhabit.split(":");const k=ensureKid(kid);k.habits=k.habits.filter(h=>h.id!==hid);save();render()});
-  app.querySelectorAll("[data-pdelmission]").forEach(b=>b.onclick=()=>{const [kid,mid]=b.dataset.pdelmission.split(":");const k=ensureKid(kid);k.missions=k.missions.filter(m=>m.id!==mid);save();render()});
   app.querySelectorAll("[data-gate]").forEach(b=>b.onclick=()=>{gateView=b.dataset.gate;gateErr="";render()});
   app.querySelectorAll("form[data-form=parentlogin] button[type=submit]").forEach(b=>b.onclick=()=>{b.form.dataset.mode=b.dataset.mode});
   app.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{modal=null;render()});
@@ -879,7 +898,8 @@ function act(a,b){
   else if(a==="questdone"){k.quest[t+"_done"]=true;save();addXP(XP.step,"brave thing");setTimeout(()=>addCoins(COINS.brave,"brave thing"),1200);render()}
   else if(a==="questnew"){const QP=QUESTS.concat(((freshDeck()||{}).quests)||[]);k.quest[t]=QP[(QP.indexOf(k.quest[t])+1+Math.floor(Math.random()*(QP.length-1)))%QP.length];delete k.quest[t+"_done"];save();render()}
   else if(a==="addhabit"){modal={type:"habit"};render()}
-  else if(a==="addmission"){modal={type:"mission",mtype:"Learn"};render()}
+  else if(a==="aboutme"){modal={type:"aboutme"};render()}
+  else if(a==="addgoal"){modal={type:"goal"};render()}
   else if(a==="canceltimer"){clearInterval(timerState.iv);timerState=null;render()}
   else if(a==="coachnext"){coachRound={i:(coachRound.i+1+Math.floor(Math.random()*(CRITIC.length-1)))%CRITIC.length,picked:null};render()}
   else if(a==="toggleapprove"){S.approve=!S.approve;save();render()}
@@ -909,12 +929,14 @@ function submit(f){
   if(["parentlogin","createfam","joinparent","kidjoin"].includes(f.dataset.form)){authSubmit(f,d);return}
   const k=K(),t=today();
   if(f.dataset.form==="journal"){const first=!k.journal[t];k.journal[t]={tried:d.tried.trim(),felt:d.felt.trim(),coach:d.coach.trim(),learned:d.learned.trim()};save();if(first){addXP(XP.journal,"Brave Book entry");setTimeout(()=>addCoins(COINS.journal,"Brave Book"),1200)}else toast("Updated");render()}
-  else if(f.dataset.form==="smart"){k.goals=k.goals||[];k.goals.unshift({id:uid(),specific:d.specific.trim(),measure:d.measure.trim(),step:d.step.trim(),why:(d.why||"").trim(),fit:d.fit,due:d.due,created:t,progress:0,done:false});save();addXP(XP.goalset,"SMART goal set");setTimeout(()=>addCoins(COINS.goalset,"for setting a goal"),1200);document.querySelector(".main").scrollTop=0;render()}
+  else if(f.dataset.form==="goal"){const steps=d.steps.split("\n").map(x=>x.replace(/^\s*(step\s*)?\d+\s*[:.)-]\s*/i,"").trim()).filter(Boolean);if(!steps.length){toast("Add at least one step");return}k.goals=k.goals||[];k.goals.unshift({id:uid(),title:d.title.trim(),why:(d.why||"").trim(),due:d.due||null,steps:steps.map(t=>({t,done:false})),done:false,created:t,checkins:[]});save();modal=null;addXP(XP.goalset,"new goal");setTimeout(()=>addCoins(COINS.goalset,"for setting a goal"),1200);render()}
+  else if(f.dataset.form==="addstep"){const g=k.goals.find(x=>x.id===modal.gid);if(g&&d.text.trim()){g.steps.push({t:d.text.trim(),done:false});save()}modal=null;render()}
+  else if(f.dataset.form==="checkin"){const g=k.goals.find(x=>x.id===modal.gid);if(g){g.checkins=g.checkins||[];g.checkins.push({week:weekStart(),date:t,rating:d.rating||"Made progress",pct:goalPct(g),note:(d.note||"").trim(),next:(d.next||"").trim()});if(d.next&&d.next.trim()&&!g.steps.some(x=>x.t.toLowerCase()===d.next.trim().toLowerCase()))g.steps.push({t:d.next.trim(),done:false});save();addXP(XP.checkinGoal,"weekly check-in")}modal=null;render()}
+  else if(f.dataset.form==="aboutme"){const first=!k.profile;k.profile={interests:(d.interests||"").split("|").filter(Boolean),good:(d.good||"").trim(),hard:(d.hard||"").trim(),calm:(d.calm||"").split("|").filter(Boolean),reward:(d.reward||"").trim(),hero:(d.hero||"").trim(),chrono:d.chrono||"",grow:(d.grow||"").trim(),together:(d.together||"").trim(),updated:t};save();modal=null;if(first)addXP(XP.aboutme,"About Me done");else toast("Updated");render()}
   else if(f.dataset.form==="win"){k.wins=k.wins||[];k.wins.push({id:uid(),date:t,cat:d.cat,text:d.text.trim(),who:(d.who||"").trim(),status:"pending",coins:0});save();addXP(COINS.winXP,"posted a win");document.querySelector(".main").scrollTop=0;render()}
   else if(f.dataset.form==="chore"){const kk=ensureKid(modal.kid);kk.chores.push({id:uid(),name:d.name.trim(),pts:Math.max(1,parseInt(d.pts)||1),freq:d.freq,day:+d.day});save();modal=null;render()}
   else if(f.dataset.form==="reward"){S.rewards.push({id:uid(),name:d.name.trim(),cost:Math.max(1,parseInt(d.cost)||1)});save();modal=null;render()}
   else if(f.dataset.form==="habit"){if(modal.habit&&modal.habit.id){Object.assign(modal.habit,{name:d.name.trim(),cue:d.cue.trim(),identity:d.identity.trim()})}else k.habits.push({id:uid(),name:d.name.trim(),cue:d.cue.trim(),identity:d.identity.trim(),done:[]});save();modal=null;render()}
-  else if(f.dataset.form==="mission"){const steps=d.steps.split("\n").map(s=>s.replace(/^level\s*\d+\s*[:.-]\s*/i,"").trim()).filter(Boolean);if(!steps.length)steps.push("Do it once","Do it again, better","Teach someone else");k.missions.unshift({id:uid(),title:d.title.trim(),type:modal.mtype||"Learn",steps:steps.map(s=>({t:s,done:false})),done:false});save();modal=null;goalsView="missions";tab="goals";toast("Mission launched");render()}
 
 }
 function pinPress(p){
@@ -944,7 +966,7 @@ function summary(id){
   days.forEach(d=>{const c=k.checkins[d]||{},j=k.journal[d];const hd=k.habits.filter(h=>h.done.includes(d)).length;out+=d.slice(5)+": "+(c.weather?WX[c.weather].l:"—")+" · temp "+(c.temp||"—")+" · habits "+hd+"/"+k.habits.length+(j?"\n   tried: "+j.tried+(j.coach?" | coach: "+j.coach:""):"")+"\n"});
   const tw=(k.wins||[]).filter(w=>days.includes(w.date));if(tw.length)out+="Wins: "+tw.map(w=>w.cat+": "+w.text).join(" | ")+"\n";
   out+="Coins: "+(k.coins||0)+" · pending approvals: "+pendingCount(k)+"\n";
-  const og=(k.goals||[]).filter(g=>!g.done);if(og.length)out+="\nGoals: "+og.map(g=>g.specific+" ("+(g.progress||0)+"%)").join("; ")+"\n";
+  const og=(k.goals||[]).filter(g=>!g.done);if(og.length)out+="\nGoals: "+og.map(g=>(g.title||g.specific)+" ("+goalPct(g)+"%"+(nextStep(g)?", next: "+nextStep(g).t:"")+")").join("; ")+"\n";
   if(k.echoes[weekKey()])out+="\nParent echo: "+k.echoes[weekKey()];
   return out;
 }
