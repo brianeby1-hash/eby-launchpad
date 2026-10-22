@@ -212,6 +212,7 @@ details[open] summary::before{transform:rotate(45deg)}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="config.js"></script>
 <script src="fresh.js"></script>
+<script src="seasons.js"></script>
 <script>
 (function(){
 "use strict";
@@ -391,7 +392,7 @@ function ensureKid(id){
 function addCoins(n,why,kid){const k=kid?ensureKid(kid):K();k.coins=(k.coins||0)+n;save();if(!kid||kid===S.active)toast((n>0?"+":"")+n+" coins"+(why?" · "+why:""))}
 function choreDue(c,dateKeyStr){const d=new Date(dateKeyStr+"T12:00:00");if(c.freq==="daily")return true;if(c.freq==="weekly")return d.getDay()===c.day;if(c.freq==="once")return !K().choreLog.some(l=>l.chore===c.id&&l.status!=="rejected");return true}
 function choreEntry(k,cid,date){return k.choreLog.find(l=>l.chore===cid&&l.date===date&&l.status!=="rejected")}
-function pendingCount(k){return k.choreLog.filter(l=>l.status==="pending").length+k.redemptions.filter(r=>r.status==="pending").length+(k.wins||[]).filter(w=>w.status==="pending").length}
+function pendingCount(k){return k.choreLog.filter(l=>l.status==="pending").length+k.redemptions.filter(r=>r.status==="pending").length+(k.wins||[]).filter(w=>w.status==="pending").length+seasonPending(k)}
 function K(){return ensureKid(S.active)}
 function levelOf(xp){let i=0;for(let j=0;j<LEVELS.length;j++)if(xp>=LEVELS[j][0])i=j;const cur=LEVELS[i],next=LEVELS[i+1];return {n:i+1,name:cur[1],cur:cur[0],next:next?next[0]:null,pct:next?Math.round((xp-cur[0])/(next[0]-cur[0])*100):100}}
 function addXP(n,why){const k=K();const before=levelOf(k.xp).n;k.xp+=n;save();toast("+"+n+" XP"+(why?" · "+why:""));if(levelOf(k.xp).n>before)setTimeout(()=>toast("LEVEL UP! You're a "+levelOf(k.xp).name+"!"),900);checkBadges()}
@@ -416,6 +417,7 @@ function checkBadges(){const k=K();let got=false;BADGES.forEach(b=>{if(!k.badges
 
 /* ---------- icons ---------- */
 const I={
+  trophy:'<svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6"/></svg>',
   home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
   check:'<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>',
   flag:'<svg viewBox="0 0 24 24"><path d="M5 21V4h12l-2 4 2 4H5"/></svg>',
@@ -461,9 +463,9 @@ function render(){
     <button class="pill sun" data-tab="chores" style="min-height:40px;font-size:15px" aria-label="Coins">${I.coin.replace("<svg",'<svg style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2"')}<span class="num">${k.coins||0}</span></button>
     <button class="btn sm ghost" data-act="parent" aria-label="Parent mode">${I.lock}${isParent&&pendingCount(k)?`<span class="pill" style="background:var(--danger);color:#fff;min-height:0;padding:2px 7px">${pendingCount(k)}</span>`:""}</button>
   </header>
-  <main class="main"><div class="wrap">${{today:renderToday,habits:renderHabits,goals:renderGoalsTab,missions:renderGoalsTab,chores:renderChores,shine:renderShine,brave:renderBrave,games:renderGames,parent:renderParent}[tab]()}</div></main>
+  <main class="main"><div class="wrap">${{today:renderToday,habits:renderHabits,goals:renderGoalsTab,missions:renderGoalsTab,season:renderSeason,chores:renderChores,shine:renderShine,brave:renderBrave,games:renderGames,parent:renderParent}[tab]()}</div></main>
   <nav class="tabs" role="tablist">
-    ${[["today","Today",I.home],["habits","Habits",I.check],["goals","Goals",I.target],["chores","Chores",I.broom],["shine","Shine",I.sparkle],["brave","Brave Book",I.book],["games","Games",I.game]].map(([id,l,ic])=>`<button class="tab" role="tab" aria-selected="${tab===id}" data-tab="${id}">${ic}<span>${l}</span></button>`).join("")}
+    ${[["today","Today",I.home],["habits","Habits",I.check],["goals","Goals",I.target],["season","Season",I.trophy],["chores","Chores",I.broom],["shine","Shine",I.sparkle],["brave","Brave Book",I.book],["games","Games",I.game]].map(([id,l,ic])=>`<button class="tab" role="tab" aria-selected="${tab===id}" data-tab="${id}">${ic}<span>${l}</span></button>`).join("")}
   </nav>
   ${modal?renderModal():""}`;
   bind();
@@ -513,6 +515,7 @@ function renderToday(){
     <div class="row between"><h1>${greet}, ${kid.name}.</h1><span class="pill">${checkinStreak(k)} day check-in streak</span></div>
     <p style="font-size:18px;opacity:.95">${doneToday===k.habits.length&&k.habits.length?"All habits done. You showed up today.":doneToday+" of "+k.habits.length+" habits done. Small things, every day."}</p>
   </section>
+  ${seasonTodayCard()}
   ${(()=>{const f=freshDeck();if(!f)return "";const seen=(()=>{try{return localStorage.getItem("fresh-seen")}catch(e){return null}})();if(seen===f.week)return "";return `<section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>New this week: ${esc(f.theme||"fresh stuff")}</h2><button class="btn sm ghost" data-act="freshseen">Got it</button></div><p class="muted">${(f.missions||[]).filter(m=>m.for==="all"||m.for===S.active).length} new missions, ${(f.games||[]).length} new games, ${(f.quests||[]).length} new brave things.</p><div class="row"><button class="btn primary" data-tab="missions">See missions</button><button class="btn" data-tab="games">See games</button></div></section>`})()}
   <section class="card stack">
     <div class="row between"><h2>What's your weather?</h2>${ci.weather?`<span class="pill kid">Logged</span>`:""}</div>
@@ -740,8 +743,9 @@ function renderParent(){
   <div class="row between"><h1>Parent Mode</h1><button class="btn ghost" data-act="lockparent">Back to kid view</button></div>
   <section class="card stack" style="border-left:8px solid var(--mint)"><div class="row between"><h2>Family code</h2><button class="btn sm ghost" data-act="copycode">Copy</button></div><div class="code">${esc(fid)}</div><p class="small muted">Type this on each boy's iPad ("I'm a kid"), and Sara uses it once with "Join as a parent". ${S.parents.length} parent account${S.parents.length===1?"":"s"} connected.</p></section>
   <p class="muted">Everything the boys log, on every device. Approve chores and rewards here; write a weekly "I saw you..." note and it shows up in their Brave Book.</p>
-  ${(()=>{const items=[];Object.keys(KIDS).forEach(id=>{const k=ensureKid(id);k.choreLog.filter(l=>l.status==="pending").forEach(l=>items.push(`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>${KIDS[id].name}</b> · ${esc(l.name)} <span class="small muted">· ${l.date.slice(5).replace("-","/")}</span></span><span class="row" style="gap:6px"><span class="coinpill">${I.coin}${l.pts}</span><button class="btn sm primary" data-approve="${id}:${l.id}:ok">Approve</button><button class="btn sm ghost" data-approve="${id}:${l.id}:no">Redo</button></span></div>`));(k.wins||[]).filter(w=>w.status==="pending").forEach(w=>items.push(`<div class="stack" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>${KIDS[id].name}</b> · ${esc(w.cat)} <span class="small muted">· ${w.date.slice(5).replace("-","/")}</span></span><p>${esc(w.text)}${w.who?` <span class="small muted">(helped: ${esc(w.who)})</span>`:""}</p><input class="t" id="wn-${w.id}" placeholder="Optional note back: That took guts."><div class="row" style="gap:6px">${[5,10,25].map(n=>`<button class="btn sm primary" data-winaward="${id}:${w.id}:${n}">+${n} coins</button>`).join("")}<button class="btn sm ghost" data-winaward="${id}:${w.id}:0">Thanks, no coins</button></div></div>`));k.redemptions.filter(r=>r.status==="pending").forEach(r=>items.push(`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>${KIDS[id].name}</b> wants: ${esc(r.name)} <span class="small muted">· ${r.date.slice(5).replace("-","/")}</span></span><span class="row" style="gap:6px"><span class="coinpill">${I.coin}${r.cost}</span><button class="btn sm primary" data-redeemdone="${id}:${r.id}:ok">Delivered</button><button class="btn sm ghost" data-redeemdone="${id}:${r.id}:no">Refund</button></span></div>`))});
+  ${(()=>{const items=[];Object.keys(KIDS).forEach(id=>{const k=ensureKid(id);items.push(...seasonOkItems(id,k));k.choreLog.filter(l=>l.status==="pending").forEach(l=>items.push(`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>${KIDS[id].name}</b> · ${esc(l.name)} <span class="small muted">· ${l.date.slice(5).replace("-","/")}</span></span><span class="row" style="gap:6px"><span class="coinpill">${I.coin}${l.pts}</span><button class="btn sm primary" data-approve="${id}:${l.id}:ok">Approve</button><button class="btn sm ghost" data-approve="${id}:${l.id}:no">Redo</button></span></div>`));(k.wins||[]).filter(w=>w.status==="pending").forEach(w=>items.push(`<div class="stack" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>${KIDS[id].name}</b> · ${esc(w.cat)} <span class="small muted">· ${w.date.slice(5).replace("-","/")}</span></span><p>${esc(w.text)}${w.who?` <span class="small muted">(helped: ${esc(w.who)})</span>`:""}</p><input class="t" id="wn-${w.id}" placeholder="Optional note back: That took guts."><div class="row" style="gap:6px">${[5,10,25].map(n=>`<button class="btn sm primary" data-winaward="${id}:${w.id}:${n}">+${n} coins</button>`).join("")}<button class="btn sm ghost" data-winaward="${id}:${w.id}:0">Thanks, no coins</button></div></div>`));k.redemptions.filter(r=>r.status==="pending").forEach(r=>items.push(`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b>${KIDS[id].name}</b> wants: ${esc(r.name)} <span class="small muted">· ${r.date.slice(5).replace("-","/")}</span></span><span class="row" style="gap:6px"><span class="coinpill">${I.coin}${r.cost}</span><button class="btn sm primary" data-redeemdone="${id}:${r.id}:ok">Delivered</button><button class="btn sm ghost" data-redeemdone="${id}:${r.id}:no">Refund</button></span></div>`))});
     return `<section class="card stack" style="border-left:8px solid var(--accent)"><div class="row between"><h2>Needs your OK</h2><span class="pill">${items.length}</span></div>${items.length?items.join(""):`<p class="muted">Nothing waiting.</p>`}</section>`})()}
+  ${seasonParentFamily()}
   ${Object.entries(KIDS).map(([id,kid])=>{const k=ensureKid(id);const lv=levelOf(k.xp);const t=today();const last7=[0,1,2,3,4,5,6].map(i=>daysAgo(i));
     return `<details class="card" ${id===S.active?"open":""}><summary><span class="avatar" style="--kid:${kid.color};width:34px;height:34px;font-size:16px">${kid.name[0]}</span>${kid.name} · Level ${lv.n} ${lv.name} · ${k.xp} XP</summary>
     <div class="stack" style="margin-top:12px">
@@ -750,6 +754,7 @@ function renderParent(){
       <div class="tablewrap"><table><thead><tr><th>Day</th><th>Weather</th><th>Temp</th><th>Habits</th><th>Journal</th></tr></thead><tbody>${last7.map(d=>{const c=k.checkins[d]||{};const j=k.journal[d];const hd=k.habits.filter(h=>h.done.includes(d)).length;return `<tr><td class="num">${d.slice(5).replace("-","/")}</td><td>${c.weather?WX[c.weather].l:"—"}</td><td class="num">${c.temp||"—"}</td><td class="num">${hd}/${k.habits.length}</td><td>${j?esc(j.tried)+(j.coach?" · <i>"+esc(j.coach)+"</i>":""):"—"}</td></tr>`}).join("")}</tbody></table></div>
       <label class="f">Parent echo for this week ("This week, I saw you...")<textarea class="t" id="echo-${id}" data-echo="${id}" placeholder="This week, I saw you keep going on your math even when you were frustrated.">${esc(k.echoes[weekKey()]||"")}</textarea></label>
       <div class="row"><button class="btn primary" data-saveecho="${id}">Save note</button><button class="btn ghost" data-bonus="${id}">Give +25 bonus XP</button><button class="btn ghost" data-copysummary="${id}">Copy weekly summary</button></div>
+      ${seasonParentKid(id)}
       <h3>Habits</h3>
       <div class="stack">${k.habits.map(h=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(h.name)} <span class="small muted">· ${streak(h)} day chain</span></span><button class="btn sm ghost" data-pdelhabit="${id}:${h.id}">Remove</button></div>`).join("")||"<p class='muted small'>None</p>"}</div>
       <div class="row between"><h3>Chores</h3><span class="row" style="gap:6px"><span class="coinpill">${I.coin}${k.coins||0}</span><button class="btn sm ghost" data-coinadj="${id}:10">+10</button><button class="btn sm ghost" data-coinadj="${id}:-10">−10</button><button class="btn sm primary" data-addchore="${id}">+ Chore</button></span></div>
@@ -780,8 +785,136 @@ function renderParent(){
     <div class="tip"><div class="n">5</div><div><b>Let them own the missions.</b><p class="small">Kids work harder on goals they chose. Offer the life-skill quests; let them pick and break it into levels.</p></div></div>
   </section>`;
 }
+/* ---------- seasons (Alpha-style 8-week skill blocks; content in seasons.js) ---------- */
+const SXP={pick:15,milestone:50,test:300}, SCOIN={milestone:10,test:50,debate:10};
+function TR(){return window.TRACKS||{}}
+function curSeason(){const L=window.SEASONS||[];if(!L.length)return null;const t=today();return L.find(s=>t>=s.kickoff&&t<=s.finale)||L.filter(s=>s.kickoff>t).sort((a,b)=>a.kickoff<b.kickoff?-1:1)[0]||L[L.length-1]}
+function seasonWeek(s){const a=new Date(s.start+"T12:00:00"),b=new Date(today()+"T12:00:00");return Math.floor((b-a)/86400000/7)+1}
+function curIdx(s){return Math.max(0,Math.min(s.weeks-1,seasonWeek(s)-1))}
+function weekDate(s,w){const d=new Date(s.start+"T12:00:00");d.setDate(d.getDate()+(w-1)*7);return dayKey(d)}
+function ksea0(k,s){return ((k&&k.seasons)||{})[s.id]||{}}
+function ksea(k,s){k.seasons=k.seasons||{};return k.seasons[s.id]||(k.seasons[s.id]={})}
+function fillPick(t,p){return String(t||"").replace(/\{pick\}/g,p||"your pick")}
+function quizScores(ans){const sc={};Object.keys(TR()).forEach(x=>sc[x]=0);(window.SEASON_QUIZ||[]).forEach(q=>{const o=q.opts[parseInt(ans[q.id])];if(o)Object.entries(o.s).forEach(([t,n])=>sc[t]=(sc[t]||0)+n)});return sc}
+function suggestTrack(ans){const sc=quizScores(ans);const d=(curSeason()||{}).defaults||{};return Object.keys(sc).sort((a,b)=>sc[b]-sc[a]||(b===d[S.active])-(a===d[S.active]))[0]}
+function trackPicks(tr,id){const age=(KIDS[id]||{}).age||10;return ((TR()[tr]||{}).picks||[]).filter(p=>(p.ageMin==null||age>=p.ageMin)&&(p.ageMax==null||age<=p.ageMax))}
+function focusMs(s,se){const c=curIdx(s);const ms=se.ms||[];for(let i=0;i<=c;i++)if(ms[i]&&ms[i].status!=="done")return i;return c}
+function seasonPending(k){const s=curSeason();if(!s)return 0;const se=ksea0(k,s);let n=(se.ms||[]).filter(m=>m.status==="pending").length;if(se.test&&se.test.status==="pending")n++;if(se.status==="proposed")n++;return n}
+function stockPct(st){return st&&st.start>0&&st.now>0?(st.now-st.start)/st.start*100:null}
+function lockSeason(id,track,pick){
+  const s=curSeason(),T=TR()[track];if(!s||!T){toast("Pick a skill first");return}
+  const k=ensureKid(id),se=ksea(k,s);pick=(pick||se.pick||"").trim();
+  if(se.status==="active"&&se.track===track&&se.ms){se.pick=pick;se.ms.forEach((m,i)=>{if(m.status!=="done"&&!m.custom&&T.milestones[i])m.t=fillPick(T.milestones[i],pick)});if(se.test&&!se.test.custom)se.test.t=fillPick(T.test,pick)}
+  else{se.track=track;se.pick=pick;se.status="active";se.locked=today();se.ms=T.milestones.slice(0,s.weeks).map(x=>({t:fillPick(x,pick),status:"todo"}));se.test={t:fillPick(T.test,pick),status:"todo"}}
+  save();toast(KIDS[id].name+": "+T.name+" locked in");render();
+}
+function seasonOkItems(id,k){
+  const s=curSeason();if(!s)return [];const se=ksea0(k,s),T=TR()[se.track]||{},out=[],nm=`<b>${KIDS[id].name}</b>`;
+  if(se.status==="proposed")out.push(`<div class="stack" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>${nm} picked his season: <b>${esc(T.name||se.track)}</b> · ${esc(se.pick)}${se.suggested&&se.suggested!==se.track?` <span class="small muted">(quiz suggested ${esc((TR()[se.suggested]||{}).name||se.suggested)})</span>`:""}</span><div class="row" style="gap:6px"><button class="btn sm primary" data-slock="${id}">Lock it in</button><span class="small muted">Or change it in ${KIDS[id].name}'s Season section below.</span></div></div>`);
+  (se.ms||[]).forEach((m,i)=>{if(m.status==="pending")out.push(`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span style="flex:1;min-width:0">${nm} · Season week ${i+1}: ${esc(m.t)}</span><span class="row" style="gap:6px"><button class="btn sm primary" data-smok="${id}:${i}:ok">Signed off</button><button class="btn sm ghost" data-smok="${id}:${i}:no">Not yet</button></span></div>`)});
+  if(se.test&&se.test.status==="pending")out.push(`<div class="row between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span style="flex:1;min-width:0">${nm} says he passed his <b>Test2Pass</b>: ${esc(se.test.t)}</span><span class="row" style="gap:6px"><button class="btn sm primary" data-stestok="${id}:ok">Passed!</button><button class="btn sm ghost" data-stestok="${id}:no">Not yet</button></span></div>`);
+  return out;
+}
+function stockBoard(s){
+  const rows=Object.keys(KIDS).map(id=>{const st=ksea0(S.kids[id],s).stock||{};return {id,co:st.co,p:stockPct(st)}}).filter(r=>r.co);
+  if(!rows.length)return `<p class="small muted">No picks yet.</p>`;
+  rows.sort((a,b)=>(b.p==null?-1e9:b.p)-(a.p==null?-1e9:a.p));
+  return `<div class="stack" style="gap:6px">${rows.map((r,i)=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><b>${KIDS[r.id].name}</b> · ${esc(r.co)}</span><span class="pill ${r.p==null?"":r.p>=0?"mint":""} num">${r.p==null?"waiting on prices":(r.p>=0?"+":"")+r.p.toFixed(1)+"%"}${i===0&&r.p!=null?" · leading":""}</span></div>`).join("")}</div>`;
+}
+function familyTracks(s){
+  const i=curIdx(s),before=today()<s.start;
+  return `<section class="card stack"><h2>${before?"Week 1 at the family table":"This week at the family table"}</h2>
+    <div class="tip"><div class="n">${I.mic.replace("<svg",'<svg style="width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"')}</div><div><b>Friday Debate Night</b><p style="font-family:var(--display);font-size:19px">"${esc((s.debate||[])[i]||"")}"</p><p class="small muted">Coin flip picks your side. 5 minutes to prepare, 2 minutes each, then a 1-minute comeback. Winner gets +${SCOIN.debate} coins.</p></div></div>
+    <div class="tip"><div class="n">${I.coin.replace("<svg",'<svg style="width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.2"')}</div><div><b>Money Talk</b><p>${esc((s.money||[])[i]||"")}</p></div></div>
+    <h3>Stock competition</h3>${stockBoard(s)}
+  </section>`;
+}
+function renderSeason(){
+  const s=curSeason();if(!s)return `<div class="card"><p class="muted">No season is set up yet.</p></div>`;
+  const k=K(),se=ksea0(k,s),t=today(),w=seasonWeek(s),T=TR()[se.track],dl=daysUntil(s.finale);
+  const status=t<s.start?"Starts "+fmtDate(s.kickoff):t>s.finale?"Season over":"Week "+Math.min(w,s.weeks)+" of "+s.weeks;
+  let html=`<section class="hero"><div class="row between"><h1>${esc(s.name)}</h1><span class="pill">${status}</span></div><p style="font-size:18px;opacity:.95">${t>s.finale?"Season finished. You did something hard.":"Finale Day is "+fmtDate(s.finale)+(dl>=0?" · "+dl+" days to go":"")+". You'll show everyone what you can do."}</p></section>`;
+  if(!se.track){
+    html+=`<section class="card stack" style="border-left:8px solid var(--sun)"><h2>Pick your season</h2><p class="muted">For the next 8 weeks you'll get really good at one thing, then prove it in front of the family. Answer 5 quick questions and the app suggests what fits you. Then you pick exactly what you'll do.</p>
+      <div class="stack" style="gap:8px">${Object.values(TR()).map(x=>`<div class="row" style="gap:10px"><span class="pill" style="background:${x.color};color:#fff">${esc(x.name)}</span><span>${esc(x.tagline)}</span></div>`).join("")}</div>
+      <button class="btn primary" data-act="seasonquiz">Start (+${SXP.pick} XP)</button></section>`;
+  }else if(se.status!=="active"){
+    html+=`<section class="card stack" style="border-left:8px solid ${T?T.color:"var(--sun)"}"><h2>You picked ${esc(T?T.name:se.track)}</h2><p style="font-family:var(--display);font-size:20px">${esc(se.pick)}</p><p class="muted">Dad or Mom will look at it and lock it in. Then your 8 weeks start.</p><button class="btn ghost" data-act="seasonquiz">Change my pick</button></section>`;
+  }else{
+    const fi=focusMs(s,se),m=se.ms[fi],cur=curIdx(s);
+    html+=`<section class="card stack" style="border-left:8px solid ${T.color}"><div class="row between"><h2>${fi<cur?"Make-up first: week "+(fi+1):"This week"}</h2><span class="pill" style="background:${T.color};color:#fff">${esc(T.name)}</span></div>
+      <p class="small muted">My season: ${esc(se.pick)}</p>
+      <p style="font-family:var(--display);font-size:21px;line-height:1.3">${esc(m.t)}</p>
+      ${m.status==="done"?`<span class="pill mint" style="justify-self:start">Signed off</span>`:m.status==="pending"?`<div class="row"><span class="pill sun">Waiting for Dad or Mom to check</span><button class="btn sm ghost" data-sms="${fi}">Oops, not yet</button></div>`:`<button class="btn primary" data-sms="${fi}">I did it (+${SXP.milestone} XP when checked)</button>`}
+    </section>
+    <section class="card stack"><div class="row between"><h2>My 8 weeks</h2><span class="pill mint num">${se.ms.filter(x=>x.status==="done").length}/${se.ms.length}</span></div>
+      <div class="steps">${se.ms.map((x,i)=>`<div class="step ${x.status==="done"?"done":""}" style="align-items:flex-start"><span class="box" style="margin-top:2px">${x.status==="done"?I.check:""}</span><span style="flex:1;min-width:0"><b class="small">Week ${i+1} · ${fmtDate(weekDate(s,i+1))}</b><br>${esc(x.t)}</span>${x.status==="pending"?`<span class="pill sun">checking</span>`:x.status!=="done"&&i<=cur?`<button class="btn sm ghost" style="background:var(--panel)" data-sms="${i}">Done</button>`:""}</div>`).join("")}</div>
+    </section>
+    <section class="card stack" style="border-left:8px solid var(--accent)"><div class="row between"><h2>Test2Pass · ${fmtDate(s.finale)}</h2>${se.test.status==="done"?`<span class="pill mint">PASSED</span>`:""}</div>
+      <p style="font-family:var(--display);font-size:19px">${esc(se.test.t)}</p>
+      <p class="small muted">You don't pass by showing up. You pass by doing it in front of an audience. +${SXP.test} XP and ${SCOIN.test} coins.</p>
+      ${se.test.status==="done"?"":se.test.status==="pending"?`<span class="pill sun" style="justify-self:start">Waiting for Dad or Mom</span>`:(se.ms.every(x=>x.status==="done")||t>=weekDate(s,s.weeks))?`<button class="btn accent" data-act="seasontest">I passed it!</button>`:`<span class="small muted">Unlocks in week ${s.weeks}, or when all 8 weeks are signed off.</span>`}
+    </section>`;
+  }
+  const st=se.stock||{};
+  html+=familyTracks(s);
+  html+=`<section class="card stack"><h2>My stock pick</h2>${st.co?`<p style="font-family:var(--display);font-size:20px">${esc(st.co)}${stockPct(st)!=null?` <span class="pill ${stockPct(st)>=0?"mint":""} num">${stockPct(st)>=0?"+":""}${stockPct(st).toFixed(1)}%</span>`:""}</p><p class="small muted">Dad or Mom updates the price each week at Money Talk.</p>`:`<p class="muted">Pick one company you'd want to own a piece of. Something you know: Nike, Apple, Disney, Nintendo... Be ready to say why in one sentence.</p><form class="row" data-form="stockco"><input class="t" style="flex:1;min-width:160px" id="sc-co" name="co" required placeholder="Company name"><button class="btn primary" type="submit">Pick it</button></form>`}</section>`;
+  return html;
+}
+function seasonTodayCard(){
+  const s=curSeason();if(!s||today()>s.finale)return "";const se=ksea0(K(),s),T=TR()[se.track];
+  if(!se.track)return `<section class="card stack" style="border-left:8px solid var(--sun)"><h2>${esc(s.name)} ${today()<s.start?"starts "+fmtDate(s.kickoff):"is on"}</h2><p class="muted">Pick your skill for the next 8 weeks: run a business, give a talk, or train for a big challenge.</p><button class="btn primary" data-act="seasonquiz">Pick my season</button></section>`;
+  if(se.status!=="active")return `<section class="card stack" style="border-left:8px solid ${T?T.color:"var(--sun)"}"><h2>Season pick sent</h2><p class="muted">${esc(se.pick)} · waiting for Dad or Mom to lock it in.</p></section>`;
+  const fi=focusMs(s,se),m=se.ms[fi];
+  return `<section class="card stack" style="border-left:8px solid ${T.color}"><div class="row between"><h2>Season · week ${fi+1}</h2><span class="pill" style="background:${T.color};color:#fff">${esc(T.name)}</span></div><p style="font-family:var(--display);font-size:19px">${esc(m.t)}</p><div class="row">${m.status==="pending"?`<span class="pill sun">Waiting for a check</span>`:m.status==="done"?`<span class="pill mint">Signed off</span>`:""}<button class="btn" data-tab="season">Open my season</button></div></section>`;
+}
+function seasonParentFamily(){
+  const s=curSeason();if(!s)return "";const i=curIdx(s);
+  return `<section class="card stack" style="border-left:8px solid var(--sun)"><div class="row between"><h2>${esc(s.name)} · ${today()<s.start?"starts "+fmtDate(s.kickoff):today()>s.finale?"done":"week "+Math.min(seasonWeek(s),s.weeks)+" of "+s.weeks}</h2>${s.playbook?`<a class="btn sm ghost" href="${esc(s.playbook)}" target="_blank" rel="noopener">Playbook</a>`:""}</div>
+    <p class="small"><b>Friday debate:</b> ${esc((s.debate||[])[i]||"")}<br><b>Money talk:</b> ${esc((s.money||[])[i]||"")}</p>
+    <div class="row" style="gap:6px"><span class="small muted">Debate winner:</span>${Object.entries(KIDS).map(([id,kid])=>`<button class="btn sm" data-debate="${id}">${kid.name} +${SCOIN.debate}</button>`).join("")}</div>
+    <h3>Stock competition</h3>${stockBoard(s)}
+    <p class="small muted">Finale Day ${fmtDate(s.finale)}. Each boy's season, milestones and stock prices are in his section below. To add a season or change topics, ask Claude to edit seasons.js.</p></section>`;
+}
+function seasonParentKid(id){
+  const s=curSeason();if(!s)return "";const k=ensureKid(id),se=ksea0(k,s),d=(s.defaults||{})[id],tr=se.track||d,st=se.stock||{};
+  const opts=Object.entries(TR()).map(([key,x])=>`<button type="button" class="chip" data-single="ss-track-${id}" data-val="${key}" aria-pressed="${tr===key}">${esc(x.name)}${key===d?" (plan)":""}${key===se.suggested?" (quiz)":""}</button>`).join("");
+  return `<h3>Season</h3>
+    ${se.quiz?`<p class="small muted">Quiz suggested <b>${esc((TR()[se.suggested]||{}).name||"")}</b>. He picked <b>${esc((TR()[se.track]||{}).name||"")}</b>: ${esc(se.pick||"")}.</p>`:`<p class="small muted">${KIDS[id].name} hasn't taken the Season Picker yet. You can still set his season here.</p>`}
+    <form class="stack" data-form="seasonset"><input type="hidden" name="kid" value="${id}">
+      <label class="f">Skill<div class="chips">${opts}</div><input type="hidden" id="ss-track-${id}" name="track" value="${esc(tr||"")}"></label>
+      <label class="f">His specific pick<input class="t" name="pick" value="${esc(se.pick||"")}" placeholder="${esc(((trackPicks(tr,id)[0])||{}).t||"")}"></label>
+      <div class="row"><button class="btn primary" type="submit">${se.status==="active"?"Save changes":"Lock it in & start"}</button>${se.status==="active"?`<button type="button" class="btn ghost" data-sreset="${id}">Reset season</button>`:""}</div>
+    </form>
+    ${se.status==="active"?`<details><summary>Edit his 8 weeks and Test2Pass</summary><div class="stack" style="margin-top:8px">${se.ms.map((m,i)=>`<div class="row" style="gap:6px;align-items:flex-start"><span class="pill num" style="margin-top:10px">${i+1}</span><textarea class="t" style="flex:1;min-height:56px" id="sm-${id}-${i}">${esc(m.t)}</textarea><span class="stack" style="gap:4px"><button class="btn sm" data-smedit="${id}:${i}">Save</button>${m.status==="done"?`<span class="pill mint">done</span>`:m.status==="pending"?`<span class="pill sun">pending</span>`:`<button class="btn sm ghost" data-smok="${id}:${i}:ok">Sign off</button>`}</span></div>`).join("")}
+      <div class="row" style="gap:6px;align-items:flex-start"><span class="pill" style="margin-top:10px">Test</span><textarea class="t" style="flex:1;min-height:56px" id="sm-${id}-test">${esc(se.test.t)}</textarea><button class="btn sm" data-smedit="${id}:test">Save</button></div></div></details>`:""}
+    <div class="row" style="gap:6px;align-items:flex-end"><label class="f" style="flex:2;min-width:140px">Stock pick<input class="t" id="sco-${id}" value="${esc(st.co||"")}" placeholder="Company"></label><label class="f" style="flex:1;min-width:90px">Start $<input class="t num" id="sst-${id}" type="number" step="0.01" min="0" value="${st.start||""}"></label><label class="f" style="flex:1;min-width:90px">Now $<input class="t num" id="snw-${id}" type="number" step="0.01" min="0" value="${st.now||""}"></label><button class="btn sm" data-stocksave="${id}">Save</button></div>`;
+}
+
 function renderModal(){
   const m=modal;
+  if(m.type==="seasonquiz"){
+    const s=curSeason();const se=s?ksea0(K(),s):{};
+    if(m.step!==2){const ans=m.ans||se.quiz||{};
+      return `<div class="modal" data-close><div class="card">
+      <div class="row between"><h2>Season Picker</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
+      <p class="small muted">5 quick questions. No wrong answers. Go with your gut.</p>
+      <form class="stack" data-form="seasonquiz" style="margin-top:12px;gap:16px">
+        ${(window.SEASON_QUIZ||[]).map((q,n)=>`<label class="f">${n+1}. ${esc(q.q)}<div class="chips">${q.opts.map((o,i)=>`<button type="button" class="chip" data-single="sq-${q.id}" data-val="${i}" aria-pressed="${String(ans[q.id])===String(i)}">${esc(o.t)}</button>`).join("")}</div><input type="hidden" id="sq-${q.id}" name="${q.id}" value="${esc(ans[q.id]==null?"":ans[q.id])}"></label>`).join("")}
+        <button class="btn primary block" type="submit">See what fits me</button>
+      </form></div></div>`}
+    const sug=m.sug,trk=m.track||sug,T=TR()[trk]||{},d=(s.defaults||{})[S.active],picks=trackPicks(trk,S.active);
+    return `<div class="modal" data-close><div class="card">
+      <div class="row between"><h2>Your season</h2><button class="btn sm ghost" data-act="closemodal">✕</button></div>
+      <p>Your answers say <b style="color:${(TR()[sug]||{}).color}">${esc((TR()[sug]||{}).name||"")}</b> fits you best.${d&&d!==sug?` Dad's plan was <b>${esc((TR()[d]||{}).name||"")}</b>. Pick the one you want to own.`:""}</p>
+      <div class="stack" style="margin-top:10px;gap:8px">${Object.entries(TR()).map(([key,x])=>`<button type="button" class="coachopt ${key===trk?"picked":""}" data-strack="${key}"><b style="color:${x.color}">${esc(x.name)}</b> · ${esc(x.tagline)}${key===sug?` <span class="pill sun">Suggested</span>`:""}${key===d&&key!==sug?` <span class="pill">Dad's plan</span>`:""}</button>`).join("")}</div>
+      <form class="stack" data-form="seasonpick" style="margin-top:16px;gap:16px">
+        <label class="f">${esc(T.pickQ||"What exactly will you do?")}<div class="chips">${picks.map(p=>`<button type="button" class="chip" data-single="sp-pick" data-val="${esc(p.t)}" aria-pressed="${se.pick===p.t}">${esc(p.t)}</button>`).join("")}</div><input type="hidden" id="sp-pick" name="pick" value="${esc(picks.some(p=>p.t===se.pick)?se.pick:"")}"></label>
+        <label class="f">Or your own idea<input class="t" id="sp-own" name="own" value="${esc(se.pick&&!picks.some(p=>p.t===se.pick)&&se.track===trk?se.pick:"")}" placeholder="${trk==="speaking"?"How sharks hunt":trk==="business"?"Dog-walking for neighbors":"Ride my bike 10 miles"}"></label>
+        <label class="f">Stock competition: a company you'd want to own a piece of<input class="t" id="sp-co" name="co" value="${esc((se.stock||{}).co||"")}" placeholder="Nike, Apple, Disney, Nintendo..."></label>
+        <button class="btn primary block" type="submit">Send to Dad and Mom</button>
+      </form></div></div>`;
+  }
   if(m.type==="pin"){
     const title=pinMode==="set"?"Set a parent PIN":pinMode==="confirm"?"Enter it again":"Parent PIN";
     return `<div class="modal" data-close><div class="card" style="max-width:360px">
@@ -930,6 +1063,15 @@ function bind(){
   app.querySelectorAll("form[data-form=parentlogin] button[type=submit]").forEach(b=>b.onclick=()=>{b.form.dataset.mode=b.dataset.mode});
   app.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{modal=null;render()});
   app.querySelectorAll(".modal .card").forEach(c=>c.onclick=e=>e.stopPropagation());
+  app.querySelectorAll("[data-strack]").forEach(b=>b.onclick=()=>{modal.track=b.dataset.strack;render()});
+  app.querySelectorAll("[data-sms]").forEach(b=>b.onclick=()=>{const s=curSeason();const se=ksea(K(),s);const m=se.ms[+b.dataset.sms];if(!m||m.status==="done")return;if(m.status==="pending"){m.status="todo";delete m.at;save();render();return}m.status="pending";m.at=today();save();toast("Nice! Dad or Mom will check it.");render()});
+  app.querySelectorAll("[data-slock]").forEach(b=>b.onclick=()=>{const id=b.dataset.slock;const se=ksea0(ensureKid(id),curSeason());lockSeason(id,se.track,se.pick)});
+  app.querySelectorAll("[data-smok]").forEach(b=>b.onclick=()=>{const [id,i,v]=b.dataset.smok.split(":");const k=ensureKid(id),se=ksea(k,curSeason()),m=se.ms[+i];if(!m)return;if(v==="ok"){if(m.status!=="done"){m.status="done";m.doneAt=today();k.xp+=SXP.milestone;addCoins(SCOIN.milestone,"season week "+(+i+1),id)}}else{m.status="todo";delete m.at}save();render()});
+  app.querySelectorAll("[data-stestok]").forEach(b=>b.onclick=()=>{const [id,v]=b.dataset.stestok.split(":");const k=ensureKid(id),se=ksea(k,curSeason());if(v==="ok"){se.test.status="done";se.test.doneAt=today();k.xp+=SXP.test;addCoins(SCOIN.test,"PASSED Test2Pass",id);k.badges=k.badges||[];if(!k.badges.includes("test2pass"))k.badges.push("test2pass")}else se.test.status="todo";save();render()});
+  app.querySelectorAll("[data-smedit]").forEach(b=>b.onclick=()=>{const [id,i]=b.dataset.smedit.split(":");const se=ksea(ensureKid(id),curSeason());const v=document.getElementById("sm-"+id+"-"+i).value.trim();if(!v)return;const m=i==="test"?se.test:se.ms[+i];m.t=v;m.custom=true;save();toast("Saved")});
+  app.querySelectorAll("[data-sreset]").forEach(b=>b.onclick=()=>{if(!b.dataset.confirm){b.dataset.confirm="1";b.textContent="Tap again: clears his season progress";return}const k=ensureKid(b.dataset.sreset);const s=curSeason();const old=ksea0(k,s);k.seasons[s.id]=old.stock?{stock:old.stock}:{};save();render()});
+  app.querySelectorAll("[data-debate]").forEach(b=>b.onclick=()=>{const id=b.dataset.debate;const se=ksea(ensureKid(id),curSeason());se.debates=(se.debates||0)+1;addCoins(SCOIN.debate,"won Friday debate",id);render()});
+  app.querySelectorAll("[data-stocksave]").forEach(b=>b.onclick=()=>{const id=b.dataset.stocksave;const se=ksea(ensureKid(id),curSeason());const co=document.getElementById("sco-"+id).value.trim(),a=parseFloat(document.getElementById("sst-"+id).value),n=parseFloat(document.getElementById("snw-"+id).value);se.stock={co,start:a>0?a:null,now:n>0?n:null,updated:today()};save();toast("Stock saved for "+KIDS[id].name);render()});
   app.querySelectorAll("form[data-form]").forEach(f=>f.onsubmit=e=>{e.preventDefault();submit(f)});
   app.querySelectorAll("textarea.t, input.t").forEach(i=>i.onclick=e=>e.stopPropagation());
 }
@@ -952,6 +1094,8 @@ function act(a,b){
   else if(a==="coachnext"){coachRound={i:(coachRound.i+1+Math.floor(Math.random()*(CRITIC.length-1)))%CRITIC.length,picked:null};render()}
   else if(a==="toggleapprove"){S.approve=!S.approve;save();render()}
   else if(a==="addreward"){modal={type:"reward"};render()}
+  else if(a==="seasonquiz"){modal={type:"seasonquiz",step:1};render()}
+  else if(a==="seasontest"){const se=ksea(k,curSeason());if(se.test){se.test.status="pending";save();toast("Dad or Mom will confirm it!")}render()}
   else if(a==="export"){copyText(JSON.stringify({family:fid,kids:S.kids,rewards:S.rewards}),"Backup copied to clipboard")}
   
 }
@@ -984,6 +1128,10 @@ function submit(f){
   else if(f.dataset.form==="win"){k.wins=k.wins||[];k.wins.push({id:uid(),date:t,cat:d.cat,text:d.text.trim(),who:(d.who||"").trim(),status:"pending",coins:0});save();addXP(COINS.winXP,"posted a win");document.querySelector(".main").scrollTop=0;render()}
   else if(f.dataset.form==="chore"){const kk=ensureKid(modal.kid);kk.chores.push({id:uid(),name:d.name.trim(),pts:Math.max(1,parseInt(d.pts)||1),freq:d.freq,day:+d.day});save();modal=null;render()}
   else if(f.dataset.form==="reward"){S.rewards.push({id:uid(),name:d.name.trim(),cost:Math.max(1,parseInt(d.cost)||1)});save();modal=null;render()}
+  else if(f.dataset.form==="seasonquiz"){const ans={};(window.SEASON_QUIZ||[]).forEach(q=>{if(d[q.id]!==""&&d[q.id]!=null)ans[q.id]=+d[q.id]});if(Object.keys(ans).length<2){toast("Answer a few more first");return}modal={type:"seasonquiz",step:2,ans,sug:suggestTrack(ans),track:null};render()}
+  else if(f.dataset.form==="seasonpick"){const s=curSeason();const pick=((d.own||"").trim()||d.pick||"").trim();if(!pick){toast("Tap one, or type your own idea");return}const se=ksea(k,s);const first=!se.track;const trk=modal.track||modal.sug;if(se.status==="active"&&se.track!==trk){toast("Your season is already locked in");modal=null;render();return}se.track=trk;se.pick=pick;se.quiz=modal.ans;se.suggested=modal.sug;if(se.status!=="active")se.status="proposed";if((d.co||"").trim())se.stock={...(se.stock||{}),co:d.co.trim()};save();modal=null;if(first)addXP(SXP.pick,"season picked");else toast("Sent");render()}
+  else if(f.dataset.form==="stockco"){const se=ksea(k,curSeason());se.stock={...(se.stock||{}),co:d.co.trim()};save();toast("Stock picked: "+d.co.trim());render()}
+  else if(f.dataset.form==="seasonset"){lockSeason(d.kid,d.track,d.pick)}
   else if(f.dataset.form==="habit"){if(modal.habit&&modal.habit.id){Object.assign(modal.habit,{name:d.name.trim(),cue:d.cue.trim(),identity:d.identity.trim()})}else k.habits.push({id:uid(),name:d.name.trim(),cue:d.cue.trim(),identity:d.identity.trim(),done:[]});save();modal=null;render()}
 
 }
@@ -1015,6 +1163,7 @@ function summary(id){
   const tw=(k.wins||[]).filter(w=>days.includes(w.date));if(tw.length)out+="Wins: "+tw.map(w=>w.cat+": "+w.text).join(" | ")+"\n";
   out+="Coins: "+(k.coins||0)+" · pending approvals: "+pendingCount(k)+"\n";
   const og=(k.goals||[]).filter(g=>!g.done);if(og.length)out+="\nGoals: "+og.map(g=>(g.title||g.specific)+" ("+goalPct(g)+"%"+(nextStep(g)?", next: "+nextStep(g).t:"")+")").join("; ")+"\n";
+  {const s=curSeason(),se=s?ksea0(k,s):{};if(se.status==="active")out+="\nSeason: "+((TR()[se.track]||{}).name||se.track)+" · "+se.pick+" · "+se.ms.filter(x=>x.status==="done").length+"/"+se.ms.length+" weeks signed off"+(se.test&&se.test.status==="done"?" · PASSED":"")+"\n";}
   if(k.echoes[weekKey()])out+="\nParent echo: "+k.echoes[weekKey()];
   return out;
 }
