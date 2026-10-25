@@ -4,6 +4,25 @@
 // Types: Learn, Build, Body, Brave, Money, Life skill, Kindness. Keep steps to 3-4 levels, easiest first.
 window.FRESH = [
   {
+    week: "2026-10-25",
+    theme: "Pumpkin Patch Power",
+    missions: [
+      {for:"kellan", title:"Build a cardboard marble run that rolls for 10 whole seconds", type:"Build", steps:["Collect boxes, paper towel tubes, tape and a marble or small ball, and sketch your plan","Build version one and time it with a stopwatch (it will probably be short, that is normal)","Fix the slowest part and test again until you hit 10 seconds: each fail is a 'not yet'","Show a brother how it works and let him try to beat your time"]},
+      {for:"rowan", title:"Be the Grocery Price Detective", type:"Money", steps:["Pick 3 things we always buy (cereal, dog treats, apples) and write them on a card","At the store, find two brands of each and read the price per ounce on the shelf tag","Circle the better deal for each one and add up how much we saved","Report your findings at dinner like a detective solving a case"]},
+      {for:"holden", title:"Call Grandma or Grandpa all by yourself", type:"Brave", steps:["Pick 2 things from this week you want to tell them","Practice your hello on a dog first, nice and loud","Dial with a little help, then do all the talking yourself","Say goodbye, hang up, and tell Mom or Dad how it felt in one word"]},
+      {for:"all", title:"Dog Care Takeover: the boys run dog duty all weekend", type:"Life skill", steps:["Make a checklist: food, water, brush, walk, poop patrol, and split the jobs three ways","Do every job on Saturday with zero reminders from Mom or Dad","Do it again Sunday, and if someone forgets one, do it next time: never miss twice","Hook one job to breakfast so it becomes a habit (eat, then feed the dogs, every day)"]}
+    ],
+    games: [
+      {title:"Face Detective", how:"One person acts out a feeling with only their face and body, no words. Everyone else guesses the feeling and has to say the clue they spotted: 'your shoulders dropped, so bummed.' Try tricky ones like embarrassed, jealous, relieved, or worried."},
+      {title:"Walk in My Shoes", how:"One person tells a tiny thing that bugged them today. The next person retells it as if THEY were that person, starting with 'I felt...' The first person says if they got it right. Then switch. Bonus: do it as a brother who was grumpy, not yourself."}
+    ],
+    quests: [
+      "Raise your hand and answer a question in class today even if you are only half sure.",
+      "Try one food you have said no to before and take three real bites.",
+      "Teach a brother, Grandma or Grandpa something you learned this week, start to finish."
+    ]
+  },
+  {
     week: "2026-10-22",
     theme: "Leaf Pile Legends",
     missions: [
