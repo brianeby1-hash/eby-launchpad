@@ -4,6 +4,25 @@
 // Types: Learn, Build, Body, Brave, Money, Life skill, Kindness. Keep steps to 3-4 levels, easiest first.
 window.FRESH = [
   {
+    week: "2026-10-28",
+    theme: "Candy Corn Courage",
+    missions: [
+      {for:"kellan", title:"Make a real pitch to Mom and Dad for something you want (later bedtime, bigger job, new privilege)", type:"Brave", steps:["Write down what you want, 3 real reasons, and 1 thing you will give or do in return","Practice it out loud twice with your Coach voice, not your Critic voice","Pick a calm moment, make the pitch standing up, eyes on them, no whining allowed","If the answer is 'not yet', ask what would change it, write that down, and make a plan"]},
+      {for:"rowan", title:"Secret Kindness Agent: 5 hidden good deeds before anyone catches you", type:"Kindness", steps:["Make a secret list of 5 things (make a brother's bed, refill the dog water, leave a note in Dad's shoe)","Do 2 of them the first day and tell nobody","Finish the rest over the week without getting caught","At dinner, let everyone guess who the agent was, then confess and say which one felt best"]},
+      {for:"holden", title:"Open a Halloween Candy Shop", type:"Money", steps:["Dump out your candy and sort it into piles, then count each pile","Give each kind a price from 1 to 5 pennies and write it on a sign","Let your brothers buy candy with real coins from the coin jar, and count the money with a little help","Put your coins in a jar with a label that says what you are saving for"]},
+      {for:"all", title:"Family Not-Yet Board: everyone learns one thing they cannot do in 7 days", type:"Learn", steps:["Each person picks one skill: whistle, snap, tie a tie, do a cartwheel, say the alphabet backwards","Write it on the fridge as 'I can't ___ YET' (Mom and Dad too)","Practice 5 minutes after dinner every night, and if you skip one night, never skip two","Friday night: family talent show, and cross out your YET"]}
+    ],
+    games: [
+      {title:"Statue Breath", how:"The leader calls 'wiggle' and everyone wiggles, dances and makes noise. Then 'statue' means freeze and take one slow breath in through your nose. Last one to settle becomes the next leader. Sneaky trick: play it in the car when someone is cranky and watch the mood change."},
+      {title:"Superhero Stand", how:"Everyone stands like a superhero for 10 seconds: feet wide, hands on hips, chin up. Then each person says one thing they are going to try this week in a big, clear voice. Now do it again as a 'nervous noodle' (slumped, mumbling, looking at the floor) and talk about which one felt stronger."}
+    ],
+    quests: [
+      "At every house on Halloween, say 'trick or treat' AND 'thank you' loud enough that the person at the door hears both.",
+      "Give a brother one piece of your candy before he asks for it.",
+      "Tell Mom or Dad about one mistake you made today and what you will try next time, with zero excuses."
+    ]
+  },
+  {
     week: "2026-10-25",
     theme: "Pumpkin Patch Power",
     missions: [
