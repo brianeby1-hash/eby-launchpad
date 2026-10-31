@@ -4,6 +4,25 @@
 // Types: Learn, Build, Body, Brave, Money, Life skill, Kindness. Keep steps to 3-4 levels, easiest first.
 window.FRESH = [
   {
+    week: "2026-10-31",
+    theme: "Extra Hour Heroes",
+    missions: [
+      {for:"kellan", title:"Beat your own mile: clocks fall back this weekend, use the extra hour to start training", type:"Body", steps:["Sunday morning, run one mile (around the neighborhood or a track) and have Dad time it, then write the time on the fridge with 'not yet' next to it","Make a tiny ritual: shoes by the door the night before, same warm-up song in your head, go","Run 3 more times this week, even a short one counts, and if you skip a day do not skip the next one","Saturday, run the mile again for time: the only person you are racing is last-Sunday you, and a dog can pace you"]},
+      {for:"rowan", title:"Breakfast Boss: cook scrambled eggs and toast for the whole family", type:"Life skill", steps:["Crack 2 eggs into a bowl without shells (a grown-up watches, you do the hands) and whisk with a fork","Cook eggs just for you on low heat, stirring slow, and taste your work","Saturday: make eggs and toast for all five of us, set the table and call everyone down","Wash the pan and wipe the counter, because a chef is not done until the kitchen is done"]},
+      {for:"holden", title:"Thank the Helpers: a sign and a snack for the trash truck crew or the mail carrier", type:"Kindness", steps:["Make a big sign that says THANK YOU with a drawing of their truck","Pick a snack or drink with Mom or Dad and put it in a bag with your sign","Wait for them with a grown-up and hand it over, saying thank you loud enough to hear over the truck","Tell the family at dinner what their face did when you gave it (emotion detective!)"]},
+      {for:"all", title:"Build a Winter Bird Diner for the backyard", type:"Build", steps:["Collect pinecones on a walk and get peanut butter, birdseed and string","Roll each pinecone in peanut butter, then seed, and tie them on tree branches where you can see them from a window","Make a bird tally chart for the fridge and add a mark every time a bird shows up this week","Family vote on a name for the diner, and whoever spots the first cardinal picks the dessert"]}
+    ],
+    games: [
+      {title:"Pause Button", how:"One person fires silly quick questions (favorite dinosaur? worst smell?). Everyone else has to count '1, 2, 3' in their head before answering. Blurt early and you are out. Last one still pausing becomes the question-asker. Sneaky skill: putting a pause between a feeling and a reaction."},
+      {title:"Thankful A to Z", how:"Go around the car or table saying something you are thankful for, in alphabet order: A is apple pie, B is brothers, C is cozy blankets. No repeats, and it has to be real. Try to make it all the way to Z before you get where you are going. Hard letters (Q, X) get a team huddle."}
+    ],
+    quests: [
+      "The first time you are confused today, say 'I don't get it yet, can you show me again?' instead of staying quiet.",
+      "When it gets dark early tonight, take a 5-minute flashlight walk around the yard with a dog and zero complaints about the cold.",
+      "Hold the door for three different people today and look them in the eye when they say thanks."
+    ]
+  },
+  {
     week: "2026-10-28",
     theme: "Candy Corn Courage",
     missions: [
