@@ -4,6 +4,25 @@
 // Types: Learn, Build, Body, Brave, Money, Life skill, Kindness. Keep steps to 3-4 levels, easiest first.
 window.FRESH = [
   {
+    week: "2026-11-01",
+    theme: "Frost Patrol",
+    missions: [
+      {for:"kellan", title:"Family Weather Forecaster: predict tomorrow's high for 5 days straight and score yourself", type:"Learn", steps:["Hang an outdoor thermometer by the back door (or use the one on the porch) and make a chart with 5 rows: date, morning temp, sky, my guess for tomorrow's high, what really happened","Every evening, look at the sky, feel the wind, check today's temp, and write your guess for tomorrow's high on the chart before anyone tells you","Each day, check the real high and mark HIT (within 5 degrees) or NOT YET, and look for a pattern: clear nights usually mean colder mornings","Day 5: figure out your hit rate as a fraction and a percent, then give a 1-minute weather report at dinner like it's the evening news"]},
+      {for:"rowan", title:"Build a treat puzzle for the dogs out of a shoebox and tubes", type:"Build", steps:["Find a shoebox, 3 toilet paper tubes, and a handful of dog treats, and ask a grown-up to help cut 3 holes in the lid","Stand the tubes in the holes, drop one treat in each tube, close the lid, and put it on the floor for a dog","Time how long it takes the dog to get all the treats, then change one thing (smaller holes, a flap, a tube on its side) to make it take longer","Run it for the other dog and keep the version that keeps them busiest, then draw how it works for the fridge"]},
+      {for:"holden", title:"Animal Obstacle Course: beat your own time three days in a row", type:"Body", steps:["Pick 4 animal moves (bear crawl, crab walk, frog jump, flamingo hop) and set up a course in the living room with pillows to go around","Run the whole course once while Mom or Dad times it, and write your time on a sticky note","Run it again tomorrow and the next day, and try to beat your own time by even one second each day","Last day, teach a brother the course and be the coach who times him and says one nice thing about his bear crawl"]},
+      {for:"all", title:"Twenty Dollar Pie Project: plan a Thanksgiving dessert on a budget", type:"Money", steps:["Pick one dessert the whole family wants for Thanksgiving and write every ingredient on a list","Walk the kitchen first and cross off what we already have, then guess the price of each thing we still need","At the store, find the real prices, add them up on paper, and stay under $20 (if you go over, swap something out)","Bake a practice version this weekend, count the change you brought home, and decide as a family: same pie on Thanksgiving, or try again?"]}
+    ],
+    games: [
+      {title:"Feeling Upgrade", how:"Someone says a plain feeling word like 'mad.' The next person has to upgrade it to a more exact word, like 'frustrated.' The next one goes bigger or more exact again: 'furious,' 'annoyed,' 'jealous.' Keep going until somebody is stuck. Whoever said the last good word picks the next plain word (sad, happy, scared, tired). No repeats all week."},
+      {title:"Volume Knob", how:"One person is the DJ and turns an invisible knob from 1 (tiny whisper) to 10 (stadium). Everyone else says the same line at that exact volume: 'My name is ___ and I can do hard things.' The DJ cranks it up and down fast and tries to trick you. Stand tall and look at someone the whole time, even on a 1. Switch DJs after three rounds."}
+    ],
+    quests: [
+      "Ask Mom or Dad 'what was the hardest part of your day?' and listen to the whole answer without interrupting once.",
+      "Do the one chore you dread the most first, before breakfast, before anyone has to ask.",
+      "Tell a brother one thing he is better at than you are, and mean it."
+    ]
+  },
+  {
     week: "2026-10-31",
     theme: "Extra Hour Heroes",
     missions: [
