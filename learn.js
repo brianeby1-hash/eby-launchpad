@@ -16,6 +16,7 @@ window.LEARN = {
   source: "BGA parent portal (Kellan, Nov 1-22), Mrs. McNelley's 1st Grade Weekly News (Nov 16-20, Nov 30-Dec 4), Ms. McClure/Mrs. Northam 3rd Grade Newsletter (Nov 13)",
   kellan: {
     grade: "6th grade",
+    speed: {kind: "int", label: "Integer Blitz"},
     note: "Built from your real assignments in Advanced Math 6, English 6, Science 6 and History 6.",
     units: [
       {
@@ -267,6 +268,7 @@ window.LEARN = {
   },
   rowan: {
     grade: "3rd grade",
+    speed: {kind: "mult", label: "Times-Table Dash"},
     note: "Built from Mrs. Northam and Ms. McClure's newsletter: Frindle, literary essays, multiplication and division, and telling time.",
     units: [
       {
@@ -431,6 +433,7 @@ window.LEARN = {
   },
   holden: {
     grade: "1st grade",
+    speed: {kind: "add20", label: "Plus & Minus Rocket"},
     note: "Built from Mrs. McNelley's weekly news. Tap \"Read it to me\" to hear any question.",
     readAloud: true,
     units: [
@@ -629,5 +632,59 @@ window.LEARN = {
         ]
       }
     ]
+  }
+};
+
+// Pictures and interactive explorers (drawn by learnviz.js). units: shown on a unit's Explore screen.
+// problems: shown above that problem, keyed "<unit id>/<problem id>". Widget types: numberline, moon, fraction,
+// bars, clock, shapes, data, sky, tenframe, blocks, array, convert, timeline (see learnviz.js for each spec).
+// Prefer pictures that help a kid think (count, compare, see) over ones that print the answer.
+window.LEARN_VIZ = {
+  units: {
+    "k-moon": {blurb: "Drag the slider to move the Moon around Earth. The Sun always lights the half facing it. Watch how much of that lit half we can see.", viz: {type: "moon", step: 0}},
+    "k-int": {blurb: "Negative numbers live to the left of zero. Hop the marker around and see where you land.", viz: {type: "numberline", from: -15, to: 15, start: 0}},
+    "k-units": {blurb: "Every big unit is made of smaller units. Pick a pair and add more.", viz: {type: "convert"}},
+    "k-hf": {blurb: "Tap through the real timeline of the women from the book.", viz: {type: "timeline", title: "Hidden Figures timeline", events: [
+      {y: 1943, t: "Dorothy Vaughan starts at Langley as a human computer."},
+      {y: 1949, t: "Dorothy becomes the acting head of the West Area Computers."},
+      {y: 1951, t: "Mary Jackson joins the West Area Computers."},
+      {y: 1953, t: "Katherine Johnson starts at Langley."},
+      {y: 1958, t: "NACA becomes NASA. Mary Jackson becomes NASA's first Black woman engineer."},
+      {y: 1962, t: "John Glenn orbits Earth after asking Katherine to check the computer's numbers."}]}},
+    "k-meso": {blurb: "Thousands of years in one line. Tap each dot.", viz: {type: "timeline", title: "Mesopotamia timeline", events: [
+      {y: -3500, l: "about 3500 BCE", t: "Sumerian city-states grow between the Tigris and Euphrates."},
+      {y: -3200, l: "about 3200 BCE", t: "Cuneiform writing begins, pressed into wet clay."},
+      {y: -2300, l: "about 2300 BCE", t: "Sargon of Akkad conquers the city-states: the first empire."},
+      {y: -1750, l: "about 1750 BCE", t: "Hammurabi of Babylon writes down his code of laws."},
+      {y: -539, l: "539 BCE", t: "The Persians conquer Babylon."}]}},
+    "r-mult": {blurb: "Multiplying is rows of equal groups. Build an array and count it.", viz: {type: "array", r: 3, c: 4}},
+    "r-time": {blurb: "Move the time 5 or 15 minutes at a time and watch both hands move.", viz: {type: "clock", h: 3, m: 45}},
+    "r-place": {blurb: "Hundreds, tens and ones. Build a number with blocks.", viz: {type: "blocks", n: 347, hundreds: true}},
+    "h-equal": {blurb: "Tap slices to color them. Add more slices and watch each piece get smaller!", viz: {type: "fraction", parts: 2}},
+    "h-shapes": {blurb: "Tap each shape to find out its secret.", viz: {type: "shapes"}},
+    "h-sky": {blurb: "Slide from morning to night. Where does the Sun go? When do the stars come out?", viz: {type: "sky", hour: 7}},
+    "h-add": {blurb: "Fill the first ten frame, then add what's left. That's making a ten!", viz: {type: "tenframe", a: 8, b: 5}},
+    "h-tens": {blurb: "Blue sticks are tens. Orange cubes are ones.", viz: {type: "blocks", n: 34}}
+  },
+  problems: {
+    "k-moon/m1": {type: "moon", step: 1},
+    "k-moon/m4": {type: "moon", step: 1, title: "Slide forward a few days. Is the light growing or shrinking?"},
+    "k-int/i1": {type: "numberline", from: -10, to: 15, start: -7},
+    "k-int/i2": {type: "numberline", from: -10, to: 10, start: -4},
+    "k-int/i5": {type: "numberline", from: -10, to: 20, start: -5, unit: "\u00b0F", title: "Thermometer: hop from \u22125\u00b0F up to 14\u00b0F"},
+    "k-int/i8": {type: "data", values: [82, 90, 75, 90, 88], outlier: 20, title: "Add the 20 and watch what moves"},
+    "r-mult/a2": {type: "array", r: 6, c: 4, title: "6 bags with 4 apples each"},
+    "r-mult/a5": {type: "bars", rows: [{label: "Holden", units: 1, val: 7, known: true}, {label: "Rowan", units: 3, val: 7}]},
+    "r-mult/a6": {type: "bars", total: true, rows: [{label: "Holden", units: 1, val: 7, known: true}, {label: "Rowan", units: 3, val: 7}]},
+    "r-time/tm4": {type: "clock", h: 3, m: 45, title: "Start at 3:45 and add 30 minutes"},
+    "h-equal/e1": {type: "fraction", parts: 2, title: "A pizza cut into 2 equal parts"},
+    "h-equal/e2": {type: "fraction", unequal: true},
+    "h-equal/e4": {type: "fraction", shape: "compare"},
+    "h-equal/e6": {type: "fraction", shape: "twocuts"},
+    "h-equal/e7": {type: "fraction", parts: 4, title: "One pizza, 4 friends"},
+    "h-add/d1": {type: "tenframe", a: 8, b: 5},
+    "h-add/d4": {type: "tenframe", a: 9, b: 4},
+    "h-tens/t1": {type: "blocks", n: 34},
+    "h-sky/sk3": {type: "sky", hour: 7}
   }
 };
