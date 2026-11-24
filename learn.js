@@ -13,7 +13,7 @@
 //   why  : shown after a correct answer.
 window.LEARN = {
   updated: "2026-11-24",
-  source: "BGA parent portal, assignments Nov 1-22, 2026",
+  source: "BGA parent portal (Kellan, Nov 1-22), Mrs. McNelley's 1st Grade Weekly News (Nov 16-20, Nov 30-Dec 4), Ms. McClure/Mrs. Northam 3rd Grade Newsletter (Nov 13)",
   kellan: {
     grade: "6th grade",
     note: "Built from your real assignments in Advanced Math 6, English 6, Science 6 and History 6.",
@@ -267,8 +267,73 @@ window.LEARN = {
   },
   rowan: {
     grade: "3rd grade",
-    note: "Based on BGA's 3rd grade curriculum (Singapore Math). It gets more specific once we see Mrs. Northam's weekly newsletter.",
+    note: "Built from Mrs. Northam and Ms. McClure's newsletter: Frindle, literary essays, multiplication and division, and telling time.",
     units: [
+      {
+        id: "r-frindle", subject: "Reading", title: "Frindle and literary essays", why: "Your class just finished Frindle and is writing a literary essay about it.",
+        problems: [
+          {id: "fr1", type: "text", q: "In Frindle, what new word does Nick make up for a pen?", ans: "frindle", alt: ["a frindle"],
+            hints: ["It's the title of the book!"],
+            why: "Frindle! Nick invents the word and gets everyone to use it."},
+          {id: "fr2", type: "mc", q: "Which teacher in Frindle LOVES the dictionary?", opts: ["Mrs. Granger", "Ms. Frizzle", "Mr. Lawrence"], ans: 0,
+            traps: {1: "Ms. Frizzle is from The Magic School Bus!"},
+            hints: ["She's Nick's 5th grade language arts teacher."],
+            why: "Mrs. Granger. She and Nick go head to head over the word frindle."},
+          {id: "fr3", type: "mc", q: "What big idea does Nick figure out about words?", opts: ["Words mean what people agree they mean, by using them", "Only dictionary writers can make words", "Teachers decide what words mean"], ans: 0,
+            traps: {1: "That's what Nick wondered about. But who really decides? The people who use the words!"},
+            hints: ["Who made 'pen' mean pen in the first place?"],
+            why: "People give words their meaning by using them. That's why frindle caught on."},
+          {id: "fr4", type: "mc", q: "At the end, Mrs. Granger's letter shows that she was secretly…", opts: ["On Nick's side the whole time", "Angry the whole time", "Trying to get Nick in trouble"], ans: 0,
+            hints: ["Think about how Nick feels when he finally reads the letter."],
+            why: "She was on his side. She played the 'bad guy' to make his word story more exciting."},
+          {id: "fr5", type: "mc", q: "Which is a THEME of Frindle?", opts: ["One person's idea can make a big difference", "Never ask questions", "Pens are better than pencils"], ans: 0,
+            traps: {2: "Pens are in the story, but a theme is a life lesson."},
+            hints: ["A theme is a lesson about life. What did one kid's idea end up doing?"],
+            why: "One kid's idea spread across the whole country. That's the theme."},
+          {id: "fr6", type: "mc", q: "In a literary essay, your CLAIM is…", opts: ["Your big idea about the book", "A summary of every chapter", "The author's name"], ans: 0,
+            traps: {1: "A summary retells. A claim is YOUR idea that you prove with evidence."},
+            hints: ["It's the sentence the rest of your essay tries to prove."],
+            why: "The claim is your big idea, like 'Nick is creative.' The rest of the essay proves it."},
+          {id: "fr7", type: "mc", q: "Claim: \"Nick is creative.\" Which is the BEST evidence?", opts: ["He invents a new word and gets his whole class to use it", "He goes to school", "He has a teacher"], ans: 0,
+            traps: {1: "Lots of kids go to school. Good evidence proves YOUR claim.", 2: "That's true of every kid. Pick something only a creative person would do."},
+            hints: ["Which one shows Nick thinking up something new?"],
+            why: "Inventing a word is strong evidence. It proves the claim."}
+        ]
+      },
+      {
+        id: "r-time", subject: "Math", title: "Telling time", why: "Coming in December, mixed in with multiplication.",
+        problems: [
+          {id: "tm1", type: "num", q: "How many minutes are in 1 hour?", ans: 60,
+            traps: {"100": "Clocks don't use 100. An hour has 60 minutes."},
+            hints: ["The minute hand goes all the way around the clock once in an hour. Count by 5s: 12 numbers."],
+            why: "60 minutes = 1 hour."},
+          {id: "tm2", type: "mc", q: "The minute hand points to the 3. How many minutes past the hour is it?", opts: ["15", "3", "30"], ans: 0,
+            traps: {1: "Each number on the clock means 5 minutes. Count by 5s to the 3.", 2: "30 is when it points to the 6."},
+            hints: ["Count by 5s: 1 is 5, 2 is 10, 3 is…"],
+            why: "3 × 5 = 15 minutes past."},
+          {id: "tm3", type: "mc", q: "\"Quarter past 2\" is the same as…", opts: ["2:15", "2:25", "2:45"], ans: 0,
+            traps: {2: "2:45 is quarter TO 3. Quarter PAST means 15 minutes after."},
+            hints: ["A quarter of an hour is 15 minutes."],
+            why: "Quarter past 2 = 2:15."},
+          {id: "tm4", type: "mc", q: "It's 3:45. What time will it be in 30 minutes?", opts: ["4:15", "3:75", "4:45"], ans: 0,
+            traps: {1: "There's no 3:75! After :59 comes the next hour.", 2: "That's an hour later. We only added 30 minutes."},
+            hints: ["15 minutes gets you to 4:00. How many minutes are left?"],
+            walk: [
+              {q: "From 3:45, how many minutes to get to 4:00?", opts: ["15", "30"], c: 0, ok: "15 minutes."},
+              {q: "30 − 15 = how many minutes left after 4:00?", opts: ["15", "45"], c: 0, ok: "15 more."},
+              {q: "4:00 plus 15 minutes =", opts: ["4:15", "4:30"], c: 0, ok: "4:15. Pick it above."}
+            ],
+            why: "3:45 → 4:00 is 15 minutes, then 15 more = 4:15."},
+          {id: "tm5", type: "num", q: "Soccer starts at 4:00 and ends at 5:15. How many MINUTES long is it?", ans: 75,
+            traps: {"115": "An hour isn't 100 minutes. 4:00 to 5:00 is 60 minutes, then add 15.", "15": "That's just the part after 5:00. Don't forget the hour from 4 to 5.", "60": "That gets you to 5:00. The game goes 15 more minutes."},
+            hints: ["4:00 to 5:00 is how many minutes?", "60 + 15 = ?"],
+            why: "60 + 15 = 75 minutes."},
+          {id: "tm6", type: "mc", q: "Which is LONGER: half an hour or 20 minutes?", opts: ["Half an hour", "20 minutes"], ans: 0,
+            traps: {1: "Half of 60 minutes is 30 minutes. Is 20 more or less than 30?"},
+            hints: ["How many minutes is half of 60?"],
+            why: "Half an hour = 30 minutes, which is longer than 20."}
+        ]
+      },
       {
         id: "r-mult", subject: "Math", title: "Multiply and divide", why: "Third grade's big math skill.",
         problems: [
@@ -366,9 +431,118 @@ window.LEARN = {
   },
   holden: {
     grade: "1st grade",
-    note: "Based on BGA's 1st grade curriculum (Singapore Math and phonics). Tap the speaker to hear any question read aloud.",
+    note: "Built from Mrs. McNelley's weekly news. Tap \"Read it to me\" to hear any question.",
     readAloud: true,
     units: [
+      {
+        id: "h-equal", subject: "Math", title: "Equal parts", why: "Unit 6, starting the week after Thanksgiving.",
+        problems: [
+          {id: "e1", type: "mc", q: "A pizza is cut into 2 EQUAL parts. Each part is called a…", opts: ["half", "fourth", "whole"], ans: 0,
+            traps: {1: "Fourths means 4 equal parts. This pizza has 2.", 2: "The whole is the entire pizza before you cut it."},
+            hints: ["2 equal parts = 2 halves."],
+            why: "2 equal parts are called halves. Each one is a half."},
+          {id: "e2", type: "mc", q: "A cookie breaks into 2 pieces. One piece is BIG and one is SMALL. Are they halves?", opts: ["No, halves must be the same size", "Yes, there are 2 pieces"], ans: 0,
+            traps: {1: "Two pieces isn't enough. Halves have to be EQUAL, the same size."},
+            hints: ["Would it be fair if you got the small piece?"],
+            why: "Halves must be equal. A big piece and a small piece aren't halves."},
+          {id: "e3", type: "num", q: "A sandwich is cut into FOURTHS. How many equal parts are there?", ans: 4,
+            traps: {"2": "That's halves. Fourths means 4 equal parts."},
+            hints: ["FOURths. Listen to the number in the word."],
+            why: "Fourths = 4 equal parts. They're also called quarters."},
+          {id: "e4", type: "mc", q: "Which piece is BIGGER: one half of a pizza, or one fourth of the same pizza?", opts: ["One half", "One fourth"], ans: 0,
+            traps: {1: "Tricky! 4 is more than 2, but cutting into MORE pieces makes each piece SMALLER."},
+            hints: ["Picture sharing one pizza with 1 friend. Now picture sharing it with 3 friends. When is your slice bigger?"],
+            why: "More equal parts = smaller parts. A half is bigger than a fourth."},
+          {id: "e5", type: "num", q: "How many halves make one whole?", ans: 2,
+            traps: {"1": "One half is only part of it. How many halves fill up the whole thing?", "4": "That's fourths. How many HALVES?"},
+            hints: ["Cut an apple in half. How many pieces do you have?"],
+            why: "2 halves make 1 whole."},
+          {id: "e6", type: "mc", q: "Holden cuts his square sandwich corner to corner. Rowan cuts his straight down the middle. Both get 2 equal pieces. Who made halves?", opts: ["Both of them", "Only Holden", "Only Rowan"], ans: 0,
+            traps: {1: "Rowan's pieces are equal too. They just have a different shape.", 2: "Holden's triangles are equal too. Halves can be different shapes."},
+            hints: ["Are both boys' pieces equal? That's all halves need."],
+            why: "Both! Equal parts don't have to be the same shape. Triangles or rectangles, they're still halves."},
+          {id: "e7", type: "mc", q: "4 friends share a pizza equally. Each friend gets one…", opts: ["fourth", "half", "whole"], ans: 0,
+            traps: {1: "A half is for 2 people. There are 4 friends."},
+            hints: ["4 friends means 4 equal parts."],
+            why: "4 equal parts, so each friend gets one fourth (one quarter)."}
+        ]
+      },
+      {
+        id: "h-softcg", subject: "Phonics", title: "Soft C and soft G", why: "This is the phonics lesson for the week after Thanksgiving.",
+        problems: [
+          {id: "sc1", type: "mc", q: "In the word FACE, what sound does the C make?", opts: ["/s/ like snake", "/k/ like kite"], ans: 0,
+            traps: {1: "Look at the letter after C. It's E! When E comes after C, the C says /s/."},
+            hints: ["Say it out loud: face. Do you hear a snake sound or a kite sound?"],
+            why: "C followed by E says /s/. That's a soft C."},
+          {id: "sc2", type: "mc", q: "In the word CAT, what sound does the C make?", opts: ["/k/ like kite", "/s/ like snake"], ans: 0,
+            traps: {1: "The letter after C is A, not E, so the C stays hard: /k/."},
+            hints: ["Say it: cat."],
+            why: "C followed by A stays hard: /k/."},
+          {id: "sc3", type: "mc", q: "Which word has a SOFT C (the /s/ sound)?", opts: ["rice", "cup", "cat"], ans: 0,
+            hints: ["Look for a C with an E right after it."],
+            why: "R-I-C-E: the C comes before E, so it says /s/."},
+          {id: "sg1", type: "mc", q: "In the word PAGE, what sound does the G make?", opts: ["/j/ like jump", "/g/ like goat"], ans: 0,
+            traps: {1: "Look at the letter after G. It's E! When E comes after G, the G says /j/."},
+            hints: ["Say it: page. Do you hear jump or goat?"],
+            why: "G followed by E says /j/. That's a soft G."},
+          {id: "sg2", type: "mc", q: "Which word has a SOFT G (the /j/ sound)?", opts: ["cage", "goat", "bag"], ans: 0,
+            hints: ["Look for a G with an E right after it."],
+            why: "C-A-G-E: the G comes before E, so it says /j/."},
+          {id: "sg3", type: "mc", q: "Which word has a HARD G (like goat)?", opts: ["gum", "gem", "huge"], ans: 0,
+            traps: {1: "In gem, G is followed by E, so it says /j/.", 2: "In huge, G is followed by E, so it says /j/."},
+            hints: ["Find the G that does NOT have an E after it."],
+            why: "G-U-M: the letter after G is U, so the G stays hard."}
+        ]
+      },
+      {
+        id: "h-sky", subject: "Science", title: "Sun, Moon and stars", why: "What you're exploring in i3 Lab.",
+        problems: [
+          {id: "sk1", type: "mc", q: "The Sun is a…", opts: ["star", "planet", "moon"], ans: 0,
+            traps: {1: "Earth is a planet. The Sun is something else."},
+            hints: ["It's the closest one of these to Earth, and it makes its own light."],
+            why: "The Sun is a star! It's the closest star to Earth."},
+          {id: "sk2", type: "mc", q: "Why can't we see the stars during the day?", opts: ["The Sun is so bright it hides them", "The stars go away", "The stars are sleeping"], ans: 0,
+            traps: {1: "The stars are still there! Something is just too bright."},
+            hints: ["Can you see a flashlight outside on a sunny day?"],
+            why: "The stars are still there. The Sun's light is so bright we can't see them."},
+          {id: "sk3", type: "mc", q: "Which direction does the Sun RISE from every morning?", opts: ["East", "West"], ans: 0,
+            hints: ["The Sun sets in the West at night."],
+            why: "The Sun rises in the East and sets in the West, every day. That's a pattern!"},
+          {id: "sk4", type: "mc", q: "Does the Moon make its own light?", opts: ["No, it shines because sunlight hits it", "Yes, it glows by itself"], ans: 0,
+            hints: ["The Sun lights up the Moon, like a flashlight on a ball."],
+            why: "The Moon has no light of its own. Sunlight bounces off it."},
+          {id: "sk5", type: "mc", q: "Which one is a pattern that happens EVERY day?", opts: ["The Sun rises and sets", "It snows", "We see a rainbow"], ans: 0,
+            hints: ["Which one happens even on days it rains?"],
+            why: "The Sun rises and sets every single day. Scientists use patterns like this to make predictions."}
+        ]
+      },
+      {
+        id: "h-shapes", subject: "Math", title: "Shapes review", why: "Unit 5, which you just finished.",
+        problems: [
+          {id: "sh1", type: "num", q: "How many sides does a triangle have?", ans: 3,
+            hints: ["TRI means 3. Like a tricycle!"],
+            why: "A triangle has 3 sides and 3 corners."},
+          {id: "sh2", type: "num", q: "How many sides does a hexagon have?", ans: 6,
+            traps: {"5": "That's a pentagon. A hexagon has one more."},
+            hints: ["Think of one cell in a honeycomb. Count its sides."],
+            why: "A hexagon has 6 sides."},
+          {id: "sh3", type: "mc", q: "A ball is shaped like a…", opts: ["sphere", "circle", "cone"], ans: 0,
+            traps: {1: "A circle is FLAT (2D). A ball is round all the way around: that's 3D."},
+            hints: ["It's a 3D shape. You can hold it."],
+            why: "A ball is a sphere: round all the way around."},
+          {id: "sh4", type: "mc", q: "A can of soup is shaped like a…", opts: ["cylinder", "cone", "cube"], ans: 0,
+            hints: ["It has a circle on the top and a circle on the bottom."],
+            why: "A can is a cylinder."},
+          {id: "sh5", type: "mc", q: "What makes a shape a TRIANGLE?", opts: ["It has 3 sides and 3 corners", "It is red", "It points up"], ans: 0,
+            traps: {1: "Color doesn't change a shape. A blue triangle is still a triangle.", 2: "Turn it upside down. Still a triangle!"},
+            hints: ["If you colored it a different color, would it stop being a triangle?"],
+            why: "Sides and corners decide the shape. Color, size and which way it points don't."},
+          {id: "sh6", type: "mc", q: "Which one is a 3D shape?", opts: ["cube", "square", "circle"], ans: 0,
+            traps: {1: "A square is flat. A cube is like a box you can hold.", 2: "A circle is flat."},
+            hints: ["3D shapes are ones you can pick up, like a block."],
+            why: "A cube is 3D, like a block or a die."}
+        ]
+      },
       {
         id: "h-add", subject: "Math", title: "Add and subtract to 20", why: "Number bonds and making ten.",
         problems: [
