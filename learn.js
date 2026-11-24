@@ -11,6 +11,8 @@
 //   hints: small nudges, revealed one at a time.
 //   walk : "Walk me through it" steps. Each {q, opts, c (right index), ok (said when right)}.
 //   why  : shown after a correct answer.
+// Optional unit fields: more: "<unit id>" + added: "YYYY-MM-DD" mark a "part 2" quest built because a boy tapped
+// "More like this!" on that unit (the app then shows the request as delivered and badges the new quest).
 window.LEARN = {
   updated: "2026-11-24",
   source: "BGA parent portal (Kellan, Nov 1-22), Mrs. McNelley's 1st Grade Weekly News (Nov 16-20, Nov 30-Dec 4), Ms. McClure/Mrs. Northam 3rd Grade Newsletter (Nov 13)",
