@@ -141,6 +141,21 @@ textarea.t{min-height:72px;resize:vertical}
 /* Missions */
 .mission{padding:16px;border-radius:var(--r);background:var(--panel);box-shadow:var(--shadow);display:grid;gap:10px}
 .steps{display:grid;gap:6px}
+/* Learn tab: guided practice. Feedback boxes are color-coded: ok = mint, no = sun, hint = sky, err = danger. */
+.lfb{border-radius:14px;padding:12px 14px;font-weight:700;line-height:1.5}
+.lfb.ok{background:color-mix(in srgb,var(--mint) 16%,transparent)}
+.lfb.no{background:color-mix(in srgb,var(--sun) 24%,transparent)}
+.lfb.hint,.lfb.show{background:color-mix(in srgb,var(--sky) 13%,transparent)}
+.lfb.err{background:color-mix(in srgb,var(--danger) 13%,transparent)}
+.lq{font-family:var(--display);font-size:23px;line-height:1.35;font-weight:600}
+.lopt{display:block;width:100%;text-align:left;padding:14px 16px;border-radius:14px;background:var(--panel-2);font-weight:800;font-size:18px;border:2px solid transparent;min-height:54px}
+.lopt[aria-pressed="true"]{border-color:var(--kid)}
+.lopt.right{border-color:var(--mint);background:color-mix(in srgb,var(--mint) 16%,transparent)}
+.ldots{display:flex;gap:6px;flex-wrap:wrap}
+.ldots i{width:14px;height:14px;border-radius:99px;background:var(--panel-2);border:2px solid var(--line)}
+.ldots i.ok{background:var(--mint);border-color:var(--mint)}
+.ldots i.cur{border-color:var(--kid)}
+.lwalk{border-left:6px solid var(--kid);border-radius:0;padding:4px 0 4px 14px;display:grid;gap:10px}
 .step{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--panel-2);text-align:left;min-height:46px;width:100%}
 .step .box{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);flex:none;display:grid;place-items:center;background:var(--panel)}
 .step.done .box{background:var(--mint);border-color:var(--mint)}
@@ -213,6 +228,7 @@ details[open] summary::before{transform:rotate(45deg)}
 <script src="config.js"></script>
 <script src="fresh.js"></script>
 <script src="seasons.js"></script>
+<script src="learn.js"></script>
 <script>
 (function(){
 "use strict";
@@ -435,6 +451,7 @@ const I={
   coin:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h3.5a1.75 1.75 0 0 1 0 3.5H9.5h4a1.75 1.75 0 0 1 0 3.5H9.5"/></svg>',
   broom:'<svg viewBox="0 0 24 24"><path d="M14 3l7 7M11 6l7 7-5 5c-2 2-6 2-9-1l7-7z"/><path d="M4 20l3-3"/></svg>',
   sparkle:'<svg viewBox="0 0 24 24"><path d="M12 3l2 5.5L19.5 10 14 12l-2 5.5L10 12 4.5 10 10 8.5z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
   back:'<svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>'
 };
 const WX={
@@ -463,9 +480,9 @@ function render(){
     <button class="pill sun" data-tab="chores" style="min-height:40px;font-size:15px" aria-label="Coins">${I.coin.replace("<svg",'<svg style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2"')}<span class="num">${k.coins||0}</span></button>
     <button class="btn sm ghost" data-act="parent" aria-label="Parent mode">${I.lock}${isParent&&pendingCount(k)?`<span class="pill" style="background:var(--danger);color:#fff;min-height:0;padding:2px 7px">${pendingCount(k)}</span>`:""}</button>
   </header>
-  <main class="main"><div class="wrap">${{today:renderToday,habits:renderHabits,goals:renderGoalsTab,missions:renderGoalsTab,season:renderSeason,chores:renderChores,shine:renderShine,brave:renderBrave,games:renderGames,parent:renderParent}[tab]()}</div></main>
+  <main class="main"><div class="wrap">${{today:renderToday,habits:renderHabits,goals:renderGoalsTab,missions:renderGoalsTab,season:renderSeason,learn:renderLearn,chores:renderChores,shine:renderShine,brave:renderBrave,games:renderGames,parent:renderParent}[tab]()}</div></main>
   <nav class="tabs" role="tablist">
-    ${[["today","Today",I.home],["habits","Habits",I.check],["goals","Goals",I.target],["season","Season",I.trophy],["chores","Chores",I.broom],["shine","Shine",I.sparkle],["brave","Brave Book",I.book],["games","Games",I.game]].map(([id,l,ic])=>`<button class="tab" role="tab" aria-selected="${tab===id}" data-tab="${id}">${ic}<span>${l}</span></button>`).join("")}
+    ${[["today","Today",I.home],["habits","Habits",I.check],["goals","Goals",I.target],["season","Season",I.trophy],["learn","Learn",I.pencil],["chores","Chores",I.broom],["shine","Shine",I.sparkle],["brave","Brave Book",I.book],["games","Games",I.game]].map(([id,l,ic])=>`<button class="tab" role="tab" aria-selected="${tab===id}" data-tab="${id}">${ic}<span>${l}</span></button>`).join("")}
   </nav>
   ${modal?renderModal():""}`;
   bind();
@@ -516,6 +533,7 @@ function renderToday(){
     <p style="font-size:18px;opacity:.95">${doneToday===k.habits.length&&k.habits.length?"All habits done. You showed up today.":doneToday+" of "+k.habits.length+" habits done. Small things, every day."}</p>
   </section>
   ${seasonTodayCard()}
+  ${learnTodayCard()}
   ${(()=>{const f=freshDeck();if(!f)return "";const seen=(()=>{try{return localStorage.getItem("fresh-seen")}catch(e){return null}})();if(seen===f.week)return "";return `<section class="card stack" style="border-left:8px solid var(--violet)"><div class="row between"><h2>New this week: ${esc(f.theme||"fresh stuff")}</h2><button class="btn sm ghost" data-act="freshseen">Got it</button></div><p class="muted">${(f.missions||[]).filter(m=>m.for==="all"||m.for===S.active).length} new missions, ${(f.games||[]).length} new games, ${(f.quests||[]).length} new brave things.</p><div class="row"><button class="btn primary" data-tab="missions">See missions</button><button class="btn" data-tab="games">See games</button></div></section>`})()}
   <section class="card stack">
     <div class="row between"><h2>What's your weather?</h2>${ci.weather?`<span class="pill kid">Logged</span>`:""}</div>
@@ -754,6 +772,7 @@ function renderParent(){
       <div class="tablewrap"><table><thead><tr><th>Day</th><th>Weather</th><th>Temp</th><th>Habits</th><th>Journal</th></tr></thead><tbody>${last7.map(d=>{const c=k.checkins[d]||{};const j=k.journal[d];const hd=k.habits.filter(h=>h.done.includes(d)).length;return `<tr><td class="num">${d.slice(5).replace("-","/")}</td><td>${c.weather?WX[c.weather].l:"—"}</td><td class="num">${c.temp||"—"}</td><td class="num">${hd}/${k.habits.length}</td><td>${j?esc(j.tried)+(j.coach?" · <i>"+esc(j.coach)+"</i>":""):"—"}</td></tr>`}).join("")}</tbody></table></div>
       <label class="f">Parent echo for this week ("This week, I saw you...")<textarea class="t" id="echo-${id}" data-echo="${id}" placeholder="This week, I saw you keep going on your math even when you were frustrated.">${esc(k.echoes[weekKey()]||"")}</textarea></label>
       <div class="row"><button class="btn primary" data-saveecho="${id}">Save note</button><button class="btn ghost" data-bonus="${id}">Give +25 bonus XP</button><button class="btn ghost" data-copysummary="${id}">Copy weekly summary</button></div>
+      ${learnParent(id)}
       ${seasonParentKid(id)}
       <h3>Habits</h3>
       <div class="stack">${k.habits.map(h=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(h.name)} <span class="small muted">· ${streak(h)} day chain</span></span><button class="btn sm ghost" data-pdelhabit="${id}:${h.id}">Remove</button></div>`).join("")||"<p class='muted small'>None</p>"}</div>
@@ -785,6 +804,97 @@ function renderParent(){
     <div class="tip"><div class="n">5</div><div><b>Let them own the missions.</b><p class="small">Kids work harder on goals they chose. Offer the life-skill quests; let them pick and break it into levels.</p></div></div>
   </section>`;
 }
+/* ---------- learn (guided practice from schoolwork; content in learn.js) ----------
+   Kid progress: k.learn[unitId][problemId] = {t: tries, h: hints used, ok, shown (answer revealed), w (walkthrough used), miss: last wrong answers, d: date}.
+   k.learn[unitId]._done = date the unit was first finished (coins paid once); _xp = problem ids that already paid XP (so "practice again" can't farm). */
+const LXP={first:10,solved:5}, LCOIN={unit:10};
+let L={kid:null,unit:null,i:0,fb:null,hint:0,walk:null,wmsg:null,last:"",pick:null,showNow:false};
+function LD(){return (window.LEARN||{})[S.active]||null}
+function lunits(id){const d=(window.LEARN||{})[id||S.active];return d?d.units:[]}
+function lrec0(k,u){return ((k&&k.learn)||{})[u]||{}}
+function lrec(k,u){k.learn=k.learn||{};return k.learn[u]||(k.learn[u]={})}
+function lent(k,u,pid){const r=lrec(k,u);return r[pid]||(r[pid]={t:0,h:0,ok:false,miss:[]})}
+function lstats(k,u){const r=lrec0(k,u.id);const n=u.problems.length;const ok=u.problems.filter(p=>r[p.id]&&r[p.id].ok);return {n,solved:ok.length,first:ok.filter(p=>r[p.id].t===1&&!r[p.id].h&&!r[p.id].shown).length}}
+function lnum(s){s=String(s).trim().replace(/,/g,"").replace(/[−–]/g,"-").replace(/\s+/g,"");if(!s)return NaN;if(/^-?\d*\.?\d+\/-?\d*\.?\d+$/.test(s)){const [a,b]=s.split("/").map(Number);return b?a/b:NaN}return /^-?(\d+\.?\d*|\.\d+)$/.test(s)?Number(s):NaN}
+function lfmt(p){return p.type==="mc"?p.opts[p.ans]:p.type==="num"?String(p.ans).replace("-","−"):p.ans}
+function lreset(){L.fb=null;L.hint=0;L.walk=null;L.wmsg=null;L.last="";L.pick=null;L.showNow=false}
+function lopen(uid0){const u=lunits().find(x=>x.id===uid0);if(!u)return;const r=lrec0(K(),uid0);L.unit=uid0;const i=u.problems.findIndex(p=>!(r[p.id]&&r[p.id].ok));L.i=i<0?0:i;lreset()}
+function lcheck(raw){
+  const u=lunits().find(x=>x.id===L.unit);if(!u)return;const p=u.problems[L.i];const k=K();
+  const prev=lrec0(k,u.id)[p.id];if(prev&&prev.ok)return;
+  let right=false,trap=null,said=raw;
+  if(p.type==="num"){const v=lnum(raw);if(isNaN(v)){L.fb={kind:"err",msg:"Type a number, like 12, −5, 3.5 or 7/2."};return}
+    right=Math.abs(v-p.ans)<1e-9;if(!right)for(const key in (p.traps||{})){const kv=Number(key);if(Math.abs(v-kv)<=1e-9+0.0015*Math.abs(kv)){trap=p.traps[key];break}}}
+  else if(p.type==="text"){const v=String(raw).trim().toLowerCase();if(!v){L.fb={kind:"err",msg:"Type an answer first."};return}
+    right=[p.ans,...(p.alt||[])].some(x=>String(x).toLowerCase()===v);if(!right)trap=(p.traps||{})[v]||null}
+  else{const v=parseInt(raw,10);if(isNaN(v))return;L.pick=v;said=p.opts[v];right=v===p.ans;if(!right)trap=(p.traps||{})[v]||null}
+  const e=lent(k,u.id,p.id);e.t++;e.d=today();
+  if(right){
+    e.ok=true;const r=lrec(k,u.id);r._xp=r._xp||[];const clean=e.t===1&&!e.h&&!e.shown;const pay=!r._xp.includes(p.id)&&!e.shown;
+    L.fb={kind:"ok",msg:(clean?"First try! ":e.shown?"Now you've got it. ":e.t>3?"You stuck with it. ":"")+"Correct. "+(p.why||"")};
+    if(pay){r._xp.push(p.id);save();addXP(clean?LXP.first:LXP.solved,clean?"first try":"solved it")}else save();
+    if(!r._done&&u.problems.every(q=>r[q.id]&&r[q.id].ok)){r._done=today();save();setTimeout(()=>addCoins(LCOIN.unit,"finished "+u.title),1000)}
+  }else{
+    e.miss=(e.miss||[]).concat(String(said)).slice(-5);save();
+    L.fb={kind:"no",msg:trap?trap:e.t>=2?"Not quite. Try a hint"+(p.walk?" or walk through it step by step":"")+".":"Not quite. Check your work and try again."};
+  }
+}
+function lsay(txt){try{const sp=window.speechSynthesis;sp.cancel();const m=new SpeechSynthesisUtterance(txt.replace(/−/g,"minus ").replace(/_{2,}/g,"blank"));m.rate=.9;sp.speak(m)}catch(e){toast("Read-aloud isn't available here")}}
+function learnTodayCard(){const units=lunits();if(!units.length)return "";const k=K();const u=units.find(x=>lstats(k,x).solved<x.problems.length);if(!u)return `<section class="card stack" style="border-left:8px solid var(--mint)"><div class="row between"><h2>Learn</h2><span class="pill mint">All done</span></div><p class="muted">You finished every unit. New ones come as your classes move on.</p></section>`;const st=lstats(k,u);
+  return `<section class="card stack" style="border-left:8px solid var(--kid)"><div class="row between"><h2>Learn: ${esc(u.title)}</h2><span class="pill kid num">${st.solved}/${st.n}</span></div><p class="small muted">${esc(u.subject)} · ${esc(u.why||"")}</p><button class="btn primary" data-lunit="${u.id}">${st.solved?"Keep going":"Start"} (+${LXP.first} XP a problem)</button></section>`}
+function renderLearn(){
+  if(L.kid!==S.active){L.kid=S.active;L.unit=null;lreset()}
+  const d=LD(),k=K();
+  if(!d||!d.units.length)return `<h1>Learn</h1><div class="card"><p class="muted">No lessons here yet. Ask Claude to build some from this week's schoolwork.</p></div>`;
+  const u=L.unit&&d.units.find(x=>x.id===L.unit);
+  if(!u){
+    return `<section class="hero"><div class="row between"><h1>Learn</h1><span class="pill">${esc(d.grade)}</span></div><p style="font-size:17px;opacity:.95">${esc(d.note||"")}</p><p class="small" style="opacity:.9">First try: +${LXP.first} XP. Solved with help: +${LXP.solved} XP. Finish a unit: +${LCOIN.unit} coins.</p></section>
+    ${d.units.map(x=>{const st=lstats(k,x),r=lrec0(k,x.id),pct=Math.round(st.solved/st.n*100);return `<section class="card stack"><div class="row between"><h2>${esc(x.title)}</h2><span class="pill kid">${esc(x.subject)}</span></div>${x.why?`<p class="small muted">${esc(x.why)}</p>`:""}<div class="xpbar"><i style="width:${pct}%"></i></div><div class="row between"><span class="small muted num">${st.solved} of ${st.n} solved · ${st.first} on the first try</span>${r._done?`<span class="pill mint">Finished</span>`:""}</div><div class="row"><button class="btn ${st.solved<st.n?"primary":""}" data-lunit="${x.id}">${st.solved===0?"Start":st.solved<st.n?"Keep going":"Review"}</button>${r._done?`<button class="btn ghost" data-lagain="${x.id}">Practice again</button>`:""}</div></section>`}).join("")}`;
+  }
+  const n=u.problems.length,r=lrec0(k,u.id);
+  const top=`<div class="row between"><button class="btn sm ghost" data-l="units">${I.back}<span>All units</span></button><span class="pill kid num">${Math.min(L.i+1,n)} / ${n}</span></div>
+    <div class="ldots" aria-label="Progress">${u.problems.map((p,j)=>`<i class="${r[p.id]&&r[p.id].ok?"ok":""} ${j===L.i?"cur":""}"></i>`).join("")}</div>`;
+  if(L.i>=n){const st=lstats(k,u);const left=u.problems.filter(p=>!(r[p.id]&&r[p.id].ok));
+    return `${top}<section class="card stack" style="border-left:8px solid var(--mint)"><h1>${esc(u.title)}: done</h1><p style="font-size:19px"><b>${st.solved} of ${st.n}</b> solved, <b>${st.first}</b> on the first try.</p>${left.length?`<p class="muted">${left.length} still to crack. Give ${left.length===1?"it":"them"} another shot. It's how your brain gets stronger.</p><button class="btn primary" data-lunit="${u.id}">Try the ones left</button>`:`<p class="muted">Every problem solved. Show Dad or Mom!</p>`}<button class="btn ghost" data-l="units">Back to all units</button></section>`}
+  const p=u.problems[L.i],e=r[p.id]||{},done=!!(e.ok||L.showNow),hints=p.hints||[];
+  const sayTxt=p.q+(p.type==="mc"?". Choices: "+p.opts.join(". "):"");
+  let ans="";
+  if(p.type==="mc"){ans=`<div class="stack" style="gap:8px">${p.opts.map((o,j)=>`<button class="lopt ${done&&j===p.ans?"right":""}" data-lmc="${j}" aria-pressed="${L.pick===j}" ${done?"disabled":""}>${esc(o)}</button>`).join("")}</div>`}
+  else if(!done){ans=`<form class="row" data-lform="1" style="gap:8px"><input class="t" id="lans" style="flex:1;min-width:140px;font-size:22px" ${p.type==="num"?'inputmode="text"':""} autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${p.type==="num"?"Your answer":"Type the word"}" value="${esc(L.last)}" aria-label="Your answer"><button class="btn primary" type="submit">Check</button></form>`}
+  else{ans=`<p style="font-size:20px"><b>Answer:</b> ${esc(lfmt(p))}</p>`}
+  const fb=L.fb?`<div class="lfb ${L.fb.kind}" role="status">${esc(L.fb.msg)}</div>`:"";
+  const hintBox=L.hint?`<div class="lfb hint stack" style="gap:6px">${hints.slice(0,L.hint).map((h,j)=>`<div><b>Hint ${j+1}:</b> ${esc(h)}</div>`).join("")}</div>`:"";
+  let walk="";
+  if(p.walk&&L.walk!=null&&!done){walk=`<div class="lwalk"><b class="small muted" style="text-transform:uppercase;letter-spacing:.04em">Step by step</b>${p.walk.slice(0,L.walk+1).map((w,j)=>{const passed=j<L.walk;const m=L.wmsg&&L.wmsg.i===j?L.wmsg:null;return `<div class="stack" style="gap:6px"><span><b>${j+1}.</b> ${esc(w.q)}</span>${passed?`<span class="small" style="color:var(--mint);font-weight:800">${esc(w.ok)}</span>`:`<div class="chips">${w.opts.map((o,oi)=>`<button class="chip" data-lw="${j}:${oi}">${esc(o)}</button>`).join("")}</div>${m&&!m.ok?`<span class="small" style="font-weight:800">${esc(m.msg)}</span>`:""}`}</div>`}).join("")}</div>`}
+  const tools=done?"":`<div class="row" style="gap:8px">${L.hint<hints.length?`<button class="btn sm ghost" data-l="hint">Give me a hint${hints.length-L.hint>1?" ("+(hints.length-L.hint)+" left)":""}</button>`:""}${p.walk&&L.walk==null?`<button class="btn sm ghost" data-l="walk">Walk me through it</button>`:""}${(e.t||0)>=3&&!e.shown?`<button class="btn sm ghost" data-l="show">Show me the answer</button>`:""}</div>`;
+  const nav=`<div class="row between">${L.i>0?`<button class="btn ghost" data-l="prev">Back</button>`:"<span></span>"}${done?`<button class="btn primary" data-l="next">${L.i<n-1?"Next problem":"Finish"}</button>`:`<button class="btn ghost" data-l="next">Skip for now</button>`}</div>`;
+  return `${top}<section class="card stack"><div class="row between"><span class="pill kid">${esc(u.subject)} · ${esc(u.title)}</span><button class="btn sm ghost" data-l="say" aria-label="Read it to me" style="white-space:nowrap;gap:6px"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span>Read it to me</span></button></div>
+    <p class="lq">${esc(p.q)}</p>${ans}${fb}${hintBox}${walk}${tools}</section>${nav}
+    <div hidden id="lsay">${esc(sayTxt)}</div>`;
+}
+function learnBind(){
+  app.querySelectorAll("[data-lunit]").forEach(b=>b.onclick=()=>{tab="learn";lopen(b.dataset.lunit);render();const m=document.querySelector(".main");if(m)m.scrollTop=0});
+  app.querySelectorAll("[data-lagain]").forEach(b=>b.onclick=()=>{const k=K(),id=b.dataset.lagain,old=lrec0(k,id);k.learn[id]={_done:old._done,_xp:old._xp||[]};save();lopen(id);render()});
+  app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{const a=b.dataset.l,u=lunits().find(x=>x.id===L.unit);const p=u&&u.problems[L.i];
+    if(a==="units"){L.unit=null;lreset()}
+    else if(a==="next"){L.i++;lreset()}
+    else if(a==="prev"){L.i=Math.max(0,L.i-1);lreset()}
+    else if(a==="hint"&&p){L.hint=Math.min((p.hints||[]).length,L.hint+1);const e=lent(K(),u.id,p.id);e.h=Math.max(e.h||0,L.hint);save()}
+    else if(a==="walk"&&p){L.walk=0;L.wmsg=null;const e=lent(K(),u.id,p.id);e.w=true;e.h=Math.max(e.h||0,1);save()}
+    else if(a==="show"&&p){const e=lent(K(),u.id,p.id);e.shown=true;e.d=today();save();L.showNow=true;L.fb={kind:"show",msg:"The answer is “"+lfmt(p)+".” "+(p.why||"")+" This one stays on your list so you can solve it yourself later."}}
+    else if(a==="say"){const t=app.querySelector("#lsay");if(t)lsay(t.textContent);return}
+    render()});
+  app.querySelectorAll("[data-lmc]").forEach(b=>b.onclick=()=>{lcheck(b.dataset.lmc);render()});
+  app.querySelectorAll("[data-lw]").forEach(b=>b.onclick=()=>{const u=lunits().find(x=>x.id===L.unit);const p=u.problems[L.i];const [j,oi]=b.dataset.lw.split(":").map(Number);const w=p.walk[j];
+    if(oi===w.c){L.walk=j+1;L.wmsg={i:j,ok:true}}else L.wmsg={i:j,ok:false,msg:"Not that one. Read the question again."};render()});
+  const f=app.querySelector("[data-lform]");if(f){f.onsubmit=ev=>{ev.preventDefault();const v=app.querySelector("#lans").value;L.last=v;lcheck(v);if(L.fb&&L.fb.kind==="ok")L.last="";render()};
+    const i=app.querySelector("#lans");if(i&&L.fb&&L.fb.kind!=="ok"){i.focus();const n=i.value.length;try{i.setSelectionRange(n,n)}catch(e){}}}
+}
+function learnParent(id){const units=lunits(id);if(!units.length)return "";const k=ensureKid(id);
+  const rows=units.map(u=>{const st=lstats(k,u),r=lrec0(k,u.id);const trouble=u.problems.filter(p=>{const e=r[p.id];return e&&(e.shown||(!e.ok&&e.t>0)||e.t>=3||e.w)});
+    return `<tr><td><b>${esc(u.title)}</b><br><span class="small muted">${esc(u.subject)}</span></td><td class="num">${st.solved}/${st.n}</td><td class="num">${st.first}</td><td class="small">${trouble.length?trouble.map(p=>{const e=r[p.id];return `<div style="margin-bottom:6px">${esc(p.q.length>70?p.q.slice(0,70)+"…":p.q)}<br><span class="muted">${e.shown?"answer shown · ":e.ok?"got it · ":"not yet · "}${e.t} tr${e.t===1?"y":"ies"}${e.h?" · "+e.h+" hint"+(e.h>1?"s":""):""}${e.w?" · walkthrough":""}${(e.miss||[]).length?" · said: "+esc(e.miss.join(", ")):""}</span></div>`}).join(""):`<span class="muted">—</span>`}</td></tr>`}).join("");
+  return `<h3>Learn</h3><p class="small muted">Built from BGA schoolwork (updated ${esc((window.LEARN||{}).updated||"")}). "Watch" lists problems he missed, got help on or had the answer shown for. Those are worth a talk.</p><div class="tablewrap"><table><thead><tr><th>Unit</th><th>Solved</th><th>First try</th><th>Watch</th></tr></thead><tbody>${rows}</tbody></table></div>`}
+
 /* ---------- seasons (Alpha-style 8-week skill blocks; content in seasons.js) ---------- */
 const SXP={pick:15,milestone:50,test:300}, SCOIN={milestone:10,test:50,debate:10};
 function TR(){return window.TRACKS||{}}
@@ -1030,6 +1140,7 @@ function renderModal(){
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),1800)}
 function openPin(mode){pinMode=mode;pinBuf="";modal={type:"pin"};render()}
 function bind(){
+  learnBind();
   app.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{S.active=b.dataset.pick;ensureKid(S.active);save();tab="today";render()});
   app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==="missions")tab="goals";coachRound=null;render();document.querySelector(".main").scrollTop=0});
   app.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>act(b.dataset.act,b,e));
