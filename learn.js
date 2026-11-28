@@ -14,13 +14,65 @@
 // Optional unit fields: more: "<unit id>" + added: "YYYY-MM-DD" mark a "part 2" quest built because a boy tapped
 // "More like this!" on that unit (the app then shows the request as delivered and badges the new quest).
 window.LEARN = {
-  updated: "2026-11-24",
-  source: "BGA parent portal (Kellan, Nov 1-22), Mrs. McNelley's 1st Grade Weekly News (Nov 16-20, Nov 30-Dec 4), Ms. McClure/Mrs. Northam 3rd Grade Newsletter (Nov 13)",
+  updated: "2026-11-28",
+  source: "BGA parent portal (Kellan, Nov 1-Dec 7), Mrs. McNelley's 1st Grade Weekly News (Nov 16-20, Nov 30-Dec 4), Ms. McClure/Mrs. Northam 3rd Grade Newsletter (Nov 13)",
   kellan: {
     grade: "6th grade",
     speed: {kind: "int", label: "Integer Blitz"},
     note: "Built from your real assignments in Advanced Math 6, English 6, Science 6 and History 6.",
     units: [
+      {
+        id: "k-area", subject: "Math", title: "Area and perimeter", why: "Mr. Carlisle's new unit (A4), starting Monday: rectangles, triangles, parallelograms and trapezoids.",
+        problems: [
+          {id: "a1", type: "num", q: "A rectangle is 9 cm long and 6 cm wide. What is its AREA in square centimeters?", ans: 54,
+            traps: {"30": "That's the PERIMETER (the distance around). Area is the space inside: length × width.", "15": "You added the sides. Area means length TIMES width."},
+            hints: ["Area of a rectangle = length × width.", "How many rows of 9 squares fit if there are 6 rows?"],
+            why: "9 × 6 = 54 square centimeters (54 cm²)."},
+          {id: "a2", type: "num", q: "A square has sides that are 7 inches long. What is its PERIMETER in inches?", ans: 28,
+            traps: {"49": "That's the AREA (7 × 7). Perimeter is the distance all the way around.", "14": "You only counted 2 sides. A square has 4."},
+            hints: ["Perimeter = add up every side.", "A square has 4 equal sides."],
+            why: "7 + 7 + 7 + 7 = 4 × 7 = 28 inches."},
+          {id: "a3", type: "num", q: "A triangle has a base of 10 m and a height of 7 m. What is its area in square meters?", ans: 35,
+            traps: {"70": "So close! That's base × height, which is a whole rectangle. A triangle is HALF of that.", "17": "You added. Area uses multiplying: ½ × base × height."},
+            hints: ["A triangle is half of a rectangle with the same base and height.", "Area = ½ × base × height."],
+            walk: [
+              {q: "First, what is base × height?", opts: ["17", "70", "35"], c: 1, ok: "Yes, 10 × 7 = 70. That's the full rectangle."},
+              {q: "A triangle is what part of that rectangle?", opts: ["Half", "All of it", "Double"], c: 0, ok: "Right, half."},
+              {q: "So the triangle's area is…", opts: ["35", "140"], c: 0, ok: "Exactly. Type 35 above."}
+            ],
+            why: "½ × 10 × 7 = 35 m²."},
+          {id: "a4", type: "num", q: "A parallelogram has a base of 12 ft and a height of 5 ft. Its slanted side is 6 ft long. What is its area in square feet?", ans: 60,
+            traps: {"72": "You used the slanted side (12 × 6). The height must be straight up and down, at a right angle to the base.", "30": "No halving for a parallelogram! Only triangles (and trapezoids) use ½.", "36": "That's the perimeter (12 + 6 + 12 + 6). Area is base × height."},
+            hints: ["Picture cutting the slanted end off and sliding it to the other side. What shape do you get?", "Area = base × height. Which number is the HEIGHT, not the slanted side?"],
+            why: "A parallelogram rearranges into a rectangle, so area = base × height = 12 × 5 = 60 ft². The slanted side (6) is a trick: it only matters for perimeter."},
+          {id: "a5", type: "num", q: "A trapezoid has parallel bases of 8 cm and 14 cm, and a height of 5 cm. What is its area in square centimeters?", ans: 55,
+            traps: {"110": "That's (8 + 14) × 5, which is TWO copies of the trapezoid. Take half.", "40": "You only used the short base. A trapezoid uses BOTH bases.", "70": "You only used the long base. A trapezoid uses BOTH bases."},
+            hints: ["Area of a trapezoid = ½ × (base 1 + base 2) × height.", "Start by adding the two bases: 8 + 14."],
+            walk: [
+              {q: "Add the two parallel bases. 8 + 14 = ?", opts: ["22", "112", "6"], c: 0, ok: "Yes, 22."},
+              {q: "Multiply by the height: 22 × 5 = ?", opts: ["110", "27"], c: 0, ok: "Right, 110. That's two trapezoids put together."},
+              {q: "Now take half of 110.", opts: ["55", "220"], c: 0, ok: "Exactly. Type 55 above."}
+            ],
+            why: "½ × (8 + 14) × 5 = ½ × 22 × 5 = 55 cm². Another way: the average base is 11, and 11 × 5 = 55."},
+          {id: "a6", type: "num", q: "A rectangular garden has an area of 72 square feet. It is 9 feet long. How WIDE is it, in feet?", ans: 8,
+            traps: {"63": "You subtracted. Area = length × width, so work backward with division.", "648": "You multiplied. You already have the area. Divide to find the missing side."},
+            hints: ["Length × width = area, so 9 × ? = 72.", "What times 9 makes 72?"],
+            why: "72 ÷ 9 = 8 feet. Check: 9 × 8 = 72."},
+          {id: "a7", type: "num", q: "A square has a perimeter of 36 m. What is its AREA in square meters?", ans: 81,
+            traps: {"36": "36 is the perimeter. Find one side first, then the area.", "9": "9 m is one side. Now use it to find the area.", "324": "You squared the perimeter. Find one side first (36 ÷ 4)."},
+            hints: ["A square has 4 equal sides. How long is each one?", "Each side is 36 ÷ 4. Then area = side × side."],
+            walk: [
+              {q: "How long is one side? 36 ÷ 4 = ?", opts: ["9", "6", "32"], c: 0, ok: "Yes, each side is 9 m."},
+              {q: "Area of a square = side × side. 9 × 9 = ?", opts: ["81", "18", "36"], c: 0, ok: "Exactly. Type 81 above."}
+            ],
+            why: "Side = 36 ÷ 4 = 9 m. Area = 9 × 9 = 81 m²."},
+          {id: "a8", type: "mc", q: "Why is the area of a triangle ½ × base × height?",
+            opts: ["Two copies of the same triangle fit together into a parallelogram with that base and height", "Because triangles have 3 sides instead of 4", "Because a triangle's height is always half its base"], ans: 0,
+            traps: {1: "The number of sides isn't the reason. Think about what two copies of the triangle make together.", 2: "A triangle's height can be any length. Try picturing two of the same triangle side by side."},
+            hints: ["Cut a rectangle (or parallelogram) along its diagonal. What two shapes do you get?"],
+            why: "Two matching triangles make a parallelogram with area base × height. One triangle is half of that."}
+        ]
+      },
       {
         id: "k-moon", subject: "Science", title: "Moon phases", why: "What you're doing in Ms. Fish's class right now.",
         problems: [
@@ -643,6 +695,7 @@ window.LEARN = {
 // Prefer pictures that help a kid think (count, compare, see) over ones that print the answer.
 window.LEARN_VIZ = {
   units: {
+    "k-area": {blurb: "Area is how many unit squares fit inside. Add rows and columns to build a rectangle, then count.", viz: {type: "array", r: 4, c: 6, title: "Each dot is one square unit"}},
     "k-moon": {blurb: "Drag the slider to move the Moon around Earth. The Sun always lights the half facing it. Watch how much of that lit half we can see.", viz: {type: "moon", step: 0}},
     "k-int": {blurb: "Negative numbers live to the left of zero. Hop the marker around and see where you land.", viz: {type: "numberline", from: -15, to: 15, start: 0}},
     "k-units": {blurb: "Every big unit is made of smaller units. Pick a pair and add more.", viz: {type: "convert"}},
@@ -669,6 +722,8 @@ window.LEARN_VIZ = {
     "h-tens": {blurb: "Blue sticks are tens. Orange cubes are ones.", viz: {type: "blocks", n: 34}}
   },
   problems: {
+    "k-area/a1": {type: "array", r: 6, c: 9, title: "9 cm by 6 cm: each dot is one square centimeter"},
+    "k-area/a3": {type: "shapes", list: ["rectangle", "triangle"], title: "A triangle is half of a rectangle with the same base and height"},
     "k-moon/m1": {type: "moon", step: 1},
     "k-moon/m4": {type: "moon", step: 1, title: "Slide forward a few days. Is the light growing or shrinking?"},
     "k-int/i1": {type: "numberline", from: -10, to: 15, start: -7},
